@@ -8,11 +8,11 @@ The workshop will discuss broadly the tools used to analyze microbiome datasets.
 
 For the workshop, students/faculty should come with some things already installed on their laptops. 
 
-The attached zip folder contains data we will experiment with during the workshop.
+The attached [materials](https://github.com/alex-b-chase/16S-workshop/tree/master/materials) folder contains data we will experiment with during the workshop.
 
 Here are some instructions before you attend:
-1. Install R for your operating system. You can follow instructions here: https://cran.cnr.berkeley.edu/
-2. Install R Studio for your operating system. You can follow instructions here: https://rstudio.com/products/rstudio/download/#download
+1. Install R for your operating system. You can follow instructions [here](https://cran.cnr.berkeley.edu/)
+2. Install R Studio for your operating system. You can follow instructions [here](https://rstudio.com/products/rstudio/download/#download)
 3. Follow prompts for each installation to install applications
 4. If you already have R and R Studio installed, make sure you have a more current version of R working on your machine. You need at least R 3.5 or newer. You can update using the following commands; however, this will require you also updating a lot of your packages that you may have installed previously.
 
@@ -26,9 +26,11 @@ updateR(admin_password = 'your user password')
 6. Follow the instructions in the file and load some packages we will be exploring for the workshop. This should take about 15 min to run and require users to respond to prompts about loading package binaries. 
 
 
-
+# Powerpoint overview of sequencing data
 Presentation going over sequencing data and analyses
 
+# Materials and sample data
 Sample Data
+
 
 R workflow
