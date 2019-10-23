@@ -78,35 +78,35 @@
 300-2,plant ,Chow,1,2,F,Chow-2,12,33,LepRdb,300
 300-6,plant ,Chow,1,6,F,Chow-6,18,33,LepRdb,300
 32-0,Control,Chow,n/a,0,M,Chow-0,6,6,LepRdb,32
-32-2,Control,Chow,n/a,2,M,Chow-2,12,6,LepRdb,32
+32-12,Control,Chow,n/a,2,M,Chow-2,12,6,LepRdb,32
 34-0,Control,Chow,n/a,0,M,Chow-0,6,7,LepRdb,34
-34-2,Control,Chow,n/a,2,M,Chow-2,12,7,LepRdb,34
-37-2,Control,Chow,n/a,2,M,Chow-2,12,8,LepRdb,37
+34-12,Control,Chow,n/a,2,M,Chow-2,12,7,LepRdb,34
+37-12,Control,Chow,n/a,2,M,Chow-2,12,8,LepRdb,37
 38-0,Control,Chow,n/a,0,M,Chow-0,6,8,LepRdb,38
-38-2,Control,Chow,n/a,2,M,Chow-2,12,8,LepRdb,38
+38-12,Control,Chow,n/a,2,M,Chow-2,12,8,LepRdb,38
 40-0,plant ,Chow,1,0,M,Chow-0,6,9,LepRdb,40
-40-2,plant ,Chow,1,2,M,Chow-2,12,9,LepRdb,40
+40-12,plant ,Chow,1,2,M,Chow-2,12,9,LepRdb,40
 41-0,plant ,Chow,1,0,M,Chow-0,6,9,LepRdb,41
-41-2,plant ,Chow,1,2,M,Chow-2,12,9,LepRdb,41
+41-12,plant ,Chow,1,2,M,Chow-2,12,9,LepRdb,41
 42-0,plant ,Chow,1,0,M,Chow-0,6,10,LepRdb,42
-42-2,plant ,Chow,1,2,M,Chow-2,12,10,LepRdb,42
+42-12,plant ,Chow,1,2,M,Chow-2,12,10,LepRdb,42
 44-0,plant ,Chow,1,0,M,Chow-0,6,10,LepRdb,44
-44-2,plant ,Chow,1,2,M,Chow-2,12,10,LepRdb,44
+44-12,plant ,Chow,1,2,M,Chow-2,12,10,LepRdb,44
 45-0,plant ,Chow,1,0,M,Chow-0,6,10,LepRdb,45
-45-2,plant ,Chow,1,2,M,Chow-2,12,10,LepRdb,45
+45-12,plant ,Chow,1,2,M,Chow-2,12,10,LepRdb,45
 52-0,Control,Chow,n/a,0,M,Chow-0,6,13,BKS,52
-52-2,Control,Chow,n/a,2,M,Chow-2,12,13,BKS,52
-53-2,Control,Chow,n/a,2,M,Chow-2,12,13,BKS,53
+52-12,Control,Chow,n/a,2,M,Chow-2,12,13,BKS,52
+53-12,Control,Chow,n/a,2,M,Chow-2,12,13,BKS,53
 54-0,Control,Chow,n/a,0,M,Chow-0,6,13,BKS,54
-54-2,Control,Chow,n/a,2,M,Chow-2,12,13,BKS,54
+54-12,Control,Chow,n/a,2,M,Chow-2,12,13,BKS,54
 55-0,Control,Chow,n/a,0,M,Chow-0,6,13,BKS,55
-55-2,Control,Chow,n/a,2,M,Chow-2,12,13,BKS,55
+55-12,Control,Chow,n/a,2,M,Chow-2,12,13,BKS,55
 56-0,Control,Chow,n/a,0,F,Chow-0,6,14,BKS,56
-56-2,Control,Chow,n/a,2,F,Chow-2,12,14,BKS,56
+56-12,Control,Chow,n/a,2,F,Chow-2,12,14,BKS,56
 58-0,Control,Chow,n/a,0,F,Chow-0,6,14,BKS,58
-58-2,Control,Chow,n/a,2,F,Chow-2,12,14,BKS,58
+58-12,Control,Chow,n/a,2,F,Chow-2,12,14,BKS,58
 59-0,Control,Chow,n/a,0,F,Chow-0,6,14,BKS,59
-59-2,Control,Chow,n/a,2,F,Chow-2,12,14,BKS,59
+59-12,Control,Chow,n/a,2,F,Chow-2,12,14,BKS,59
 64-0,Metformin,Chow,n/a,0,F,Chow-0,6,17,LepRdb,64
 64-1,Metformin,Chow,n/a,1,F,Chow-1,10,17,LepRdb,64
 64-2,Metformin,Chow,n/a,2,F,Chow-2,12,17,LepRdb,64
