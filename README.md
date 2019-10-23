@@ -3,6 +3,8 @@ Introduction to microbiome analysis workshop focused on 16S rRNA amplicon-based 
 
 If you want some more informal thoughts from me on microbiome analyses, please check out my [website](https://www.abchase.co) and [blog post](http://www.abchase.co/blog/intro-to-microbiome-analyses) where I wrote about this workshop and break down a lot of these ideas more thoroughly.
 
+<img src="images/conceptual-schematic.png" width="500" align="middle"/>
+
 # BEFORE you start
 Please follow these directions to go through the workflow
 
@@ -28,12 +30,14 @@ updateR(admin_password = 'your user password')
 6. Follow the instructions in the file and load some packages we will be exploring for the workshop. This should take about 15 min to run and require users to respond to prompts about loading package binaries. 
 
 
-# Powerpoint overview of sequencing data
+# Overview of microbiome data
 Presentation going over sequencing data and analyses, including alpha- and beta-diversity analyses. All done in R!!!
 
 Obviously, this is an introduction to microbiome analyses, so please read up on a lot of the complexities that go into these types of analyses. Here are some (hopefully) helpful links. I will try and update as I find more.
 
 [Rarefaction, Alpha Diversity, and Statistics](https://www.frontiersin.org/articles/10.3389/fmicb.2019.02407/full)
+
+<img src="images/fastq-demo.png" width="300" align="middle"/>
 
 
 # Materials and sample data
