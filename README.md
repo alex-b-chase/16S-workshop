@@ -45,7 +45,9 @@ Obviously, this is an introduction to microbiome analyses, so please read up on 
 
 
 # Materials and sample data
-Sample Data
+For my workshop, I do not go from sequencing data all the way through - there is no time to cover everything. From my experience, the [QIIME2](https://docs.qiime2.org/2019.7/tutorials/moving-pictures/) and [DADA2](https://benjjneb.github.io/dada2/tutorial.html) tutorials are exceptional and provide way better information on this.
+
+I decided to focus on the "post-OTU" table section of microbiome analyses. But, I do include some sample [bash scripts](sample-qiime-processing/) for uploading and running QIIME2 on a high performance cluster (HPC).
 
 
 R workflow
