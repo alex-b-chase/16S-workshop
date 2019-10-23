@@ -39,8 +39,6 @@ Obviously, this is an introduction to microbiome analyses, so please read up on 
 
 [Rarefaction, Alpha Diversity, and Statistics](https://www.frontiersin.org/articles/10.3389/fmicb.2019.02407/full)
 
-<img src="images/fastq-demo.png" width="300" align="middle"/>
-
 <p align="center">
   <img width="260" height="300" src="images/fastq-demo.png">
 </p>
