@@ -1,4 +1,4 @@
-﻿sampleid,treatment,administration,Dosage,time-point,gender,admin-time,age,cage number,genotype,individual
+﻿sampleid,treatment,administration,Dosage,timepoint,gender,admintime,age,cage.number,genotype,individual
 #q2:types,categorical,categorical,categorical,numeric,categorical,categorical,numeric,numeric,categorical,categorical
 104-0,Control,Chow,n/a,0,F,Chow-0,6,28,LepRdb,104
 104-1,Control,Chow,n/a,1,F,Chow-1,10,28,LepRdb,104
