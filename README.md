@@ -3,7 +3,9 @@ Introduction to microbiome analysis workshop focused on 16S rRNA amplicon-based 
 
 If you want some more informal thoughts from me on microbiome analyses, please check out my [website](https://www.abchase.co) and [blog post](http://www.abchase.co/blog/intro-to-microbiome-analyses) where I wrote about this workshop and break down a lot of these ideas more thoroughly.
 
-<img src="images/conceptual-schematic.png" width="500" align="middle"/>
+<p align="center">
+  <img width="460" height="300" src="images/conceptual-schematic.png">
+</p>
 
 # BEFORE you start
 Please follow these directions to go through the workflow
@@ -38,6 +40,10 @@ Obviously, this is an introduction to microbiome analyses, so please read up on 
 [Rarefaction, Alpha Diversity, and Statistics](https://www.frontiersin.org/articles/10.3389/fmicb.2019.02407/full)
 
 <img src="images/fastq-demo.png" width="300" align="middle"/>
+
+<p align="center">
+  <img width="260" height="300" src="images/fastq-demo.png">
+</p>
 
 
 # Materials and sample data
