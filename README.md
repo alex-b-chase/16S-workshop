@@ -1,5 +1,7 @@
 # 16S-workshop
-Introduction to microbiome analysis workshop focused on 16S rRNA amplicon-based sequence data
+Introduction to microbiome analysis workshop focused on 16S rRNA amplicon-based sequence data. A lot of the workflow is adapted from a nice workshop led by the [UCI Microbiome Initiative](http://microbiome.uci.edu/)
+
+If you want some more informal thoughts from me on microbiome analyses, please check out my [website](https://www.abchase.co) and [blog post](http://www.abchase.co/blog/intro-to-microbiome-analyses) where I wrote about this workshop and break down a lot of these ideas more thoroughly.
 
 # BEFORE you start
 Please follow these directions to go through the workflow
