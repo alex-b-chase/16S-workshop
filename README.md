@@ -29,7 +29,11 @@ updateR(admin_password = 'your user password')
 
 
 # Powerpoint overview of sequencing data
-Presentation going over sequencing data and analyses
+Presentation going over sequencing data and analyses, including alpha- and beta-diversity analyses. All done in R!!!
+
+Obviously, this is an introduction to microbiome analyses, so please read up on a lot of the complexities that go into these types of analyses. Here are some (hopefully) helpful links. I will try and update as I find more.
+[Rarefaction, Alpha Diversity, and Statistics](https://www.frontiersin.org/articles/10.3389/fmicb.2019.02407/full)
+
 
 # Materials and sample data
 Sample Data
