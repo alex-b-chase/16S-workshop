@@ -49,10 +49,14 @@ Obviously, this is an introduction to microbiome analyses, so please read up on 
 ---
 
 The general workflow will be:
-1. Demultiplex _(separate samples from sequencer)_
-2. Denoise _(remove adapaters and low quality reads)_
+1. Demultiplex 
+  * separate samples from sequencing run into individual files for each sample
+2. Denoise 
+  * You will need to remove adapaters and low quality reads _(see above figure)_
 3. Generate OTUs _(or ESVs or ASVs)_
-4. Analyze OTU table _(possibly filter out mock communities or other unwanted taxa (e.g., chloroplast hit))_
+  * This will give you the read abundance for each OTU across all samples. Basically a giant abundance matrix!
+4. Analyze OTU table 
+  * You might possibly filter out mock communities or other unwanted taxa (e.g., chloroplast hits)
 5. Rarefaction _(normalizing read depth across all samples)_  
   * A "good" rarefaction depth should minimize sample loss while maximizing OTU richness.
 6. Diversity metrics _(alpha- and beta-diversity)_  
@@ -61,7 +65,7 @@ The general workflow will be:
   * __Shannon Diversity__ - strongly influences by species richness == rare species, sensitive to diversity changes
   * __Simpson Diversity__ - weighted more by evenness and common species
 6. B) Beta-diversity - measures the change in diversity of species from one environment to another.
-  * __Dissimilarity Matrix__ - Samples on both axes are scored based how similar of dissimilar they are
+  * __Dissimilarity Matrix__ - Samples on both axes are scored based how similar of dissimilar they are.  
   _many more options here_ - Jaccard, Bray-Curtis, Raup-Crick, Chao, etc. __SO MANY - READ UP ON THEM__
 
 
