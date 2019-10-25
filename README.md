@@ -56,8 +56,8 @@ The general workflow will be:
 
 This is where you will really want to read up on some basic multivariate statistics. Deciding which metrics to use are going to be dependent on your data!
 
-⋅⋅* 6A. Alpha-diversity - average species diversity in a habitat or specific area. Alpha diversity is a *local measure*.⋅⋅
-⋅⋅⋅ Shannon Diversity
+⋅⋅⋅6A. Alpha-diversity - average species diversity in a habitat or specific area. Alpha diversity is a *local measure*.⋅⋅
+⋅⋅⋅__Shannon Diversity__ - 
 
 
 # Materials and sample data
