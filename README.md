@@ -41,6 +41,7 @@ updateR(admin_password = 'your user password')
 Obviously, this is an introduction to microbiome analyses, so please read up on a lot of the complexities that go into these types of analyses. Here are some (hopefully) helpful links. I will try and update as I find more.
 
 [Rarefaction, Alpha Diversity, and Statistics](https://www.frontiersin.org/articles/10.3389/fmicb.2019.02407/full)
+[Best practices for analysing microbiomes](https://www.nature.com/articles/s41579-018-0029-9)
 
 <p align="center">
   <img width="706" height="252" src="images/fastq-demo.jpg">
@@ -72,7 +73,22 @@ The general workflow will be:
 # Materials and sample data
 For my workshop, I do not go from sequencing data all the way through - there is no time to cover everything. From my experience, the [QIIME2](https://docs.qiime2.org/2019.7/tutorials/moving-pictures/) and [DADA2](https://benjjneb.github.io/dada2/tutorial.html) tutorials are exceptional and provide way better information on this.
 
-I decided to focus on the "post-OTU" table section of microbiome analyses. But, I do include some sample [bash scripts](sample-qiime-processing/) for uploading and running QIIME2 on a high performance cluster (HPC).
+I decided to focus on the "post-OTU" table section of microbiome analyses. But, I do include some sample [bash scripts](sample-qiime-processing/) for uploading and running QIIME2 on a high performance cluster (HPC). You will definitely need to change some of the information in there to match your data files.
 
 
-R workflow
+__R workflow__
+
+Congrats if you made it this far! This is where we can start to get our hands dirty and analyze some data!
+
+I will be using the R software environment for this, so please brush up on some R basics beforehand (I provide some stuff [here](R-scripts/intro-to-R-basics.R)). R is an amazing resource where you can import all sorts of data types and conduct any type of analysis you can think of! Trust me, it is worth the investment to get your work off the ground. 
+
+Now for the microbiome analysis part. You can use the sample data provided in [materials](materials/). to follow along. Everything should work but definitely post an issue on here if I missed something.
+
+We will use this pretty simple microbiome dataset from mice microbiomes (these will have low diversity).  
+   The metadata includes information on the:
+1. Experiment: feeding effects on individual mice microbiomes
+2. Experimental information: Sample ID, cage , plot, time point etc, 
+3. Technical:  machine used for DNA extractions, tubing reused for which mouse (gavage application)
+
+[Download the code](R-scripts/microbiome-workflow.R) and run it for yourself! Let me know if you found this helpful!!
+
