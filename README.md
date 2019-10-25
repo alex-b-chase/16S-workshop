@@ -46,6 +46,8 @@ Obviously, this is an introduction to microbiome analyses, so please read up on 
   <img width="706" height="252" src="images/fastq-demo.jpg">
 </p>
 
+---
+
 The general workflow will be:
 1. Demultiplex (separate samples from sequencer)
 2. Denoise (remove adapaters and low quality reads)
@@ -53,11 +55,11 @@ The general workflow will be:
 4. Analyze OTU table (possibly filter out mock communities or other unwanted taxa (e.g., chloroplast hit))
 5. Rarefaction (normalizing read depth across all samples)
 6. Diversity metrics (alpha- and beta-diversity)
+⋅⋅*This is where you will really want to read up on some basic multivariate statistics. Deciding which metrics to use are going to be dependent on your data!
 
-This is where you will really want to read up on some basic multivariate statistics. Deciding which metrics to use are going to be dependent on your data!
+6A. Alpha-diversity - average species diversity in a habitat or specific area. Alpha diversity is a *local measure*.
 
-⋅⋅⋅6A. Alpha-diversity - average species diversity in a habitat or specific area. Alpha diversity is a *local measure*.⋅⋅
-⋅⋅⋅__Shannon Diversity__ - 
+__Shannon Diversity__ - 
 
 
 # Materials and sample data
