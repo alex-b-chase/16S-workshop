@@ -49,13 +49,14 @@ Obviously, this is an introduction to microbiome analyses, so please read up on 
 ---
 
 The general workflow will be:
-1. Demultiplex (separate samples from sequencer)
-2. Denoise (remove adapaters and low quality reads)
-3. Generate OTUs (or ESVs or ASVs)
-4. Analyze OTU table (possibly filter out mock communities or other unwanted taxa (e.g., chloroplast hit))
-5. Rarefaction (normalizing read depth across all samples)
-6. Diversity metrics (alpha- and beta-diversity)
-⋅⋅*This is where you will really want to read up on some basic multivariate statistics. Deciding which metrics to use are going to be dependent on your data!
+1. Demultiplex _(separate samples from sequencer)_
+2. Denoise _(remove adapaters and low quality reads)_
+3. Generate OTUs _(or ESVs or ASVs)_
+4. Analyze OTU table _(possibly filter out mock communities or other unwanted taxa (e.g., chloroplast hit))_
+5. Rarefaction _(normalizing read depth across all samples)_
+⋅⋅* A "good" rarefaction depth should minimize sample loss while maximizing OTU richness.
+6. Diversity metrics _(alpha- and beta-diversity)_
+⋅⋅* This is where you will really want to read up on some basic multivariate statistics. Deciding which metrics to use are going to be dependent on your data!
 
 6A. Alpha-diversity - average species diversity in a habitat or specific area. Alpha diversity is a *local measure*.
 
