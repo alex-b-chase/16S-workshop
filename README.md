@@ -57,9 +57,12 @@ The general workflow will be:
   * A "good" rarefaction depth should minimize sample loss while maximizing OTU richness.
 6. Diversity metrics _(alpha- and beta-diversity)_  
   * This is where you will really want to read up on some basic multivariate statistics. Deciding which metrics to use are going to be dependent on your data!
-6.A Alpha-diversity - average species diversity in a habitat or specific area. Alpha diversity is a *local measure*.
+6. A) Alpha-diversity - average species diversity in a habitat or specific area. Alpha diversity is a *local measure*.
   * __Shannon Diversity__ - strongly influences by species richness == rare species, sensitive to diversity changes
   * __Simpson Diversity__ - weighted more by evenness and common species
+6. B) Beta-diversity - measures the change in diversity of species from one environment to another.
+  * __Dissimilarity Matrix__ - Samples on both axes are scored based how similar of dissimilar they are
+  _many more options here_ - Jaccard, Bray-Curtis, Raup-Crick, Chao, etc. __SO MANY - READ UP ON THEM__
 
 
 # Materials and sample data
