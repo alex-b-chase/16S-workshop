@@ -41,6 +41,7 @@ updateR(admin_password = 'your user password')
 Obviously, this is an introduction to microbiome analyses, so please read up on a lot of the complexities that go into these types of analyses. Here are some (hopefully) helpful links. I will try and update as I find more.
 
 [Rarefaction, Alpha Diversity, and Statistics](https://www.frontiersin.org/articles/10.3389/fmicb.2019.02407/full)
+
 [Best practices for analysing microbiomes](https://www.nature.com/articles/s41579-018-0029-9)
 
 <p align="center">
@@ -80,7 +81,7 @@ __R workflow__
 
 Congrats if you made it this far! This is where we can start to get our hands dirty and analyze some data!
 
-I will be using the R software environment for this, so please brush up on some R basics beforehand (I provide some stuff [here](R-scripts/intro-to-R-basics.R)). R is an amazing resource where you can import all sorts of data types and conduct any type of analysis you can think of! Trust me, it is worth the investment to get your work off the ground. 
+I will be using the R software environment for this, so please brush up on some R basics beforehand (I provide some basics in this tutorial [here](R-scripts/intro-to-R-basics.R)). R is an amazing resource where you can import all sorts of data types and conduct any type of analysis you can think of! Trust me, it is worth the investment to get your work off the ground. 
 
 Now for the microbiome analysis part. You can use the sample data provided in [materials](materials/). to follow along. Everything should work but definitely post an issue on here if I missed something.
 
