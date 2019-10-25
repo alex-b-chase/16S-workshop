@@ -53,9 +53,9 @@ The general workflow will be:
 2. Denoise _(remove adapaters and low quality reads)_
 3. Generate OTUs _(or ESVs or ASVs)_
 4. Analyze OTU table _(possibly filter out mock communities or other unwanted taxa (e.g., chloroplast hit))_
-5. Rarefaction _(normalizing read depth across all samples)_ . 
+5. Rarefaction _(normalizing read depth across all samples)_  
   * A "good" rarefaction depth should minimize sample loss while maximizing OTU richness.
-6. Diversity metrics _(alpha- and beta-diversity)_ .  
+6. Diversity metrics _(alpha- and beta-diversity)_  
   * This is where you will really want to read up on some basic multivariate statistics. Deciding which metrics to use are going to be dependent on your data!
 
 6A. Alpha-diversity - average species diversity in a habitat or specific area. Alpha diversity is a *local measure*.
