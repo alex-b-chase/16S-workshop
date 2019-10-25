@@ -1,4 +1,4 @@
-# 16S-workshop
+# Introduction to Microbiome Analyses Workshop
 Introduction to microbiome analysis workshop focused on 16S rRNA amplicon-based sequence data. A lot of the workflow is adapted from a nice workshop led by the [UCI Microbiome Initiative](http://microbiome.uci.edu/)
 
 If you want some more informal thoughts from me on microbiome analyses, please check out my [website](https://www.abchase.co) and [blog post](http://www.abchase.co/blog/intro-to-microbiome-analyses) where I wrote about this workshop and break down a lot of these ideas more thoroughly.
@@ -83,7 +83,7 @@ Congrats if you made it this far! This is where we can start to get our hands di
 
 I will be using the R software environment for this, so please brush up on some R basics beforehand (I provide some basics in this tutorial [here](R-scripts/intro-to-R-basics.R)). R is an amazing resource where you can import all sorts of data types and conduct any type of analysis you can think of! Trust me, it is worth the investment to get your work off the ground. 
 
-Now for the microbiome analysis part. You can use the sample data provided in [materials](materials/). to follow along. Everything should work but definitely post an issue on here if I missed something.
+Now for the microbiome analysis part. You can use the sample data provided in [materials](materials/) to follow along. Everything should work but definitely post an issue on here if I missed something.
 
 We will use this pretty simple microbiome dataset from mice microbiomes (these will have low diversity).  
    The metadata includes information on the:
