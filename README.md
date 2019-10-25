@@ -53,6 +53,9 @@ The general workflow will be:
 4. Analyze OTU table (possibly filter out mock communities or other unwanted taxa (e.g., chloroplast hit))
 5. Rarefaction (normalizing read depth across all samples)
 6. Diversity metrics (alpha- and beta-diversity)
+
+This is where you will really want to read up on some basic multivariate statistics. Deciding which metrics to use are going to be dependent on your data!
+
 6A. Alpha-diversity - average species diversity in a habitat or specific area. Alpha diversity is a [u]local measure[/u].
 
 
