@@ -22,7 +22,7 @@ Here are some instructions before you attend:
 3. Follow prompts for each installation to install applications
 4. If you already have R and R Studio installed, make sure you have a more current version of R working on your machine. You need at least R 3.5 or newer. You can update using the following commands; however, this will require you also updating a lot of your packages that you may have installed previously.
 
-```
+```R
 #### YOU ONLY NEED TO DO THIS IF YOU HAVE AN OLD VERSION OF R <3.5
 install.packages('devtools') #assuming it is not already installed
 library(devtools)
@@ -53,7 +53,7 @@ The general workflow will be:
 4. Analyze OTU table (possibly filter out mock communities or other unwanted taxa (e.g., chloroplast hit))
 5. Rarefaction (normalizing read depth across all samples)
 6. Diversity metrics (alpha- and beta-diversity)
-  6A. 
+6A. Alpha-diversity - average species diversity in a habitat or specific area. Alpha diversity is a [u]local measure[/u].
 
 
 # Materials and sample data
