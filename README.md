@@ -22,11 +22,14 @@ Here are some instructions before you attend:
 3. Follow prompts for each installation to install applications
 4. If you already have R and R Studio installed, make sure you have a more current version of R working on your machine. You need at least R 3.5 or newer. You can update using the following commands; however, this will require you also updating a lot of your packages that you may have installed previously.
 
+```
+#### YOU ONLY NEED TO DO THIS IF YOU HAVE AN OLD VERSION OF R <3.5
 install.packages('devtools') #assuming it is not already installed
 library(devtools)
 install_github('andreacirilloac/updateR')
 library(updateR)
 updateR(admin_password = 'your user password')  
+```
 
 5. After installing everything, open R Studio. Navigate the toolbar to File > Open File and load the "Package_install.R" code attached below. 
 6. Follow the instructions in the file and load some packages we will be exploring for the workshop. This should take about 15 min to run and require users to respond to prompts about loading package binaries. 
@@ -42,6 +45,15 @@ Obviously, this is an introduction to microbiome analyses, so please read up on 
 <p align="center">
   <img width="706" height="252" src="images/fastq-demo.jpg">
 </p>
+
+The general workflow will be:
+1. Demultiplex (separate samples from sequencer)
+2. Denoise (remove adapaters and low quality reads)
+3. Generate OTUs (or ESVs or ASVs)
+4. Analyze OTU table (possibly filter out mock communities or other unwanted taxa (e.g., chloroplast hit))
+5. Rarefaction (normalizing read depth across all samples)
+6. Diversity metrics (alpha- and beta-diversity)
+  6A. 
 
 
 # Materials and sample data
