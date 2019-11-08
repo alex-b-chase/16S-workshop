@@ -44,6 +44,8 @@ Obviously, this is an introduction to microbiome analyses, so please read up on 
 
 [Best practices for analysing microbiomes](https://www.nature.com/articles/s41579-018-0029-9)
 
+[Microbiome Multi-Omics Network Analysis: Statistical Considerations, Limitations, and Opportunities](https://www.frontiersin.org/articles/10.3389/fgene.2019.00995/full)
+
 <p align="center">
   <img width="706" height="252" src="images/fastq-demo.jpg">
 </p>
