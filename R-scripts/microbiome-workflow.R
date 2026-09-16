@@ -1,322 +1,1666 @@
-############### ############### ############### ############### 
-###############   Importing data & filtering    ###############
-############### ############### ############### ############### 
-rm(list=ls())
+############################################################
+############### 16S MICROBIOME ANALYSIS ####################
+############################################################
 
-#First begin by loading the required packages by highlighting the code below and running it.
-library(vegan)
-library(ggplot2)
-library(EcolUtils)
-library(biomformat)
+# This script begins with PROCESSED 16S rRNA gene sequencing
+# data.
+#
+# Upstream processing has already:
+#
+#   - quality filtered the sequencing reads
+#   - corrected sequencing errors with DADA2
+#   - removed chimeras
+#   - generated ASVs
+#   - assigned taxonomy
+#
+# We will now focus on ecological analysis and interpretation.
+#
+#
+# IMPORTANT:
+#
+# Start with a fresh R session before running this script.
+#
+# In RStudio:
+#
+# Session > Restart R
+#
+#
+# To run one line:
+#
+# Windows: Ctrl + Enter
+# Mac:     Command + Enter
+#
+# You can also highlight several lines and run them together.
 
-# It is recommended you change the working directory to the folder that 
-# contains your table.qza, taxonomy.qza, and metadata files in the materials section
 
-setwd("/Users/alexchase/Desktop/workshop") 
-#Change the quotes part for your own computer where you stored the data
+############################################################
+##################### LOAD PACKAGES #########################
+############################################################
 
-#Files should now be output in the newly set directory
-getwd() 
+suppressPackageStartupMessages({
+
+  library(vegan)       # ecological diversity analyses
+  library(ggplot2)     # plotting
+  library(stringr)     # working with taxonomy strings
+  library(gridExtra)   # arranging plots
+  library(biomformat)  # reading BIOM abundance tables
+
+})
 
 
-#### First import metadata ####
-# experiment - mice microbiome
-# Experimental: Sample ID, cage , plot, time point etc, 
-# Technical:  machine used for DNA extractions, tubing reused for which mouse (gavage application)
+############################################################
+###################### FILE PATHS ###########################
+############################################################
 
-metadata <- read.csv("metadata.csv", row.names=1, comment.char="#")
+# We assume your working directory is the main
+# 16S-workshop folder.
+#
+# Check:
+
+getwd()
+
+list.files()
+
+
+# You should see folders including:
+#
+# materials
+# R-scripts
+# images
+#
+# If not:
+#
+# Session > Set Working Directory > Choose Directory...
+#
+# and choose the main 16S-workshop directory.
+
+
+DATA_DIR <- "materials"
+
+OUTPUT_DIR <- "workshop-results"
+
+
+# Create a folder where we can save results.
+
+dir.create(
+  OUTPUT_DIR,
+  showWarnings = FALSE
+)
+
+
+# Files required for the workshop.
+
+metadata_file <- file.path(
+  DATA_DIR,
+  "metadata.csv"
+)
+
+table_file <- file.path(
+  DATA_DIR,
+  "feature-table.biom"
+)
+
+taxonomy_file <- file.path(
+  DATA_DIR,
+  "taxonomy.tsv"
+)
+
+
+# Make sure R can find all three files.
+
+required_files <- c(
+  metadata_file,
+  table_file,
+  taxonomy_file
+)
+
+file.exists(required_files)
+
+
+if (!all(file.exists(required_files))) {
+
+  stop(
+    "R cannot find all required files. Make sure your working directory is the main 16S-workshop folder."
+  )
+
+}
+
+
+############################################################
+#################### IMPORT METADATA ########################
+############################################################
+
+# Metadata describe the samples.
+#
+# Each ROW represents a sample.
+#
+# Columns describe biological or experimental variables,
+# such as:
+#
+#   treatment
+#   timepoint
+#   sex
+#   cage
+#   individual mouse
+#
+# comment.char = "#"
+#
+# tells R to ignore the QIIME 2 metadata-type line beginning
+# with #q2:types.
+
+
+metadata <- read.csv(
+  metadata_file,
+  row.names = 1,
+  comment.char = "#",
+  check.names = FALSE,
+  stringsAsFactors = FALSE
+)
+
+
+# Inspect the data.
+
+head(metadata)
+
 str(metadata)
 
-# Now let's grab the output from QIIME2 - 
-# really only need taxonomy information and the OTU table
-# QIIME2 switched output files into these .qza or .qzv files
-# these are just zipped files that we can unzip and extract information
-unzip(zipfile = "table.qza")
+dim(metadata)
 
-# you will notice nothing happened in R Studio, but go check the folder with your data
-
-# You should see a new file folder with weird names
-# the random numbers and letters are assigned by QIIME2, the files you need are inside
-
-# Import the OTU table by specifying the location of the .biom file, 
-# The OTU table contains the sequence IDs of each OTU and their frequency across your samples.
-my_biom <- read_hdf5_biom("da8f09c2-ee7e-4063-939f-84cdabd1172d/data/feature-table.biom") #Change here within quotes.
-write_biom(my_biom, "formatted_biom.biom")
-my_biom <- read_biom("formatted_biom.biom")
-OTU_table <- as.data.frame(as.matrix(biom_data(my_biom)))
-
-# Now for taxonomic identification of each OTU
-# Taxonomy should come from the unzipped taxonomy.qza file.
-unzip(zipfile = "taxonomy.qza")
-
-OTU_taxonomy <- read.delim("5851ba33-f226-434c-9035-ee4bb1ebdfec/data/taxonomy.tsv", row.names=1)
-head(OTU_taxonomy)
-
-library("stringr")
-library("plyr")
-# get taxa levels for each
-# we will want to parse this information by each taxonomic rank (e.g., genus, family, etc.)
-OTU_taxalevel <- ldply(str_split(string = OTU_taxonomy$Taxon, pattern=";"), rbind) # Divide a column using ";"and convert list to data frame
-names(OTU_taxalevel) <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
-OTU_taxalevel2 <- as.data.frame(lapply(OTU_taxalevel, gsub, pattern=" ", replacement=""))
-# get final table with subdivided taxonomic info
-OTU_taxalevel<- cbind(OTU_taxonomy[,1:2 ],OTU_taxalevel2)
-
-# for instance, now we can get how many unique phyla in our samples
-length(as.vector(unique(OTU_taxalevel$Phylum))) # should get 8 phyla
-
-# also, can look at the percent of reads assigned to X taxa level (e.g., genus or how QIIME calls it g__)
-totalassignedtaxa <- length(which(is.na(OTU_taxalevel$Genus))) + 
-  length(which(OTU_taxalevel$Genus == "g__" )) + 
-  length(which(OTU_taxalevel$Genus == "g__unidentified"))
-(nrow(OTU_taxalevel) - totalassignedtaxa) / nrow(OTU_taxalevel) *100
-table(OTU_taxalevel$Genus)
-
-# Merge taxonomy to ESV IDs to filter out unwanted sequence IDs in the next step
-OTU_table_plus_taxonomy <- as.data.frame(merge(OTU_taxalevel, 
-                                               OTU_table, by.x = "row.names", by.y = "row.names"))
-
-####### ########### ####### 
-#######   FILTER    ####### 
-####### ########### ####### 
-
-### To ensure our downstream analysis is high quality, filtering must be performed. This includes filtering:
-###   Mock communities/other controls
-###   Unassigned OTUs/ESVs
-###   Chloroplast/mitochondria
-###   Separate experiments
+names(metadata)
 
 
-# for instance, we can filter all rows that contain "unassigned" or chloroplast samples in their taxonomy
-# You may not want to do this step if you have a lot of unassigned ESVs.
-OTU_table_filteredtaxa <- OTU_table_plus_taxonomy[!grepl("Unassigned|chloroplast", 
-                                                         OTU_table_plus_taxonomy$Taxon),]
+# Remove accidental spaces from character metadata.
+#
+# This is especially useful when metadata have been assembled
+# manually in spreadsheets.
 
-# subset only OTU table with filtered taxa
-filteredtaxa <- OTU_table_filteredtaxa$Row.names
+metadata[] <- lapply(
+  metadata,
+  function(x) {
+    if (is.character(x)) {
+      trimws(x)
+    } else {
+      x
+    }
+  }
+)
 
-filterOTU <- subset(OTU_table, rownames(OTU_table) %in% filteredtaxa)
 
-# before using R, you should have made sure your mock community looked good in QIIME2 or DADA2
-# If it looked good (means sequencing worked!), filter out mock community standards by name
-# Mock names modifiable in quotes. if you have multiple mocks = c("Mock1", "Mock2")
-finalOTU <- filterOTU[,!(names(filterOTU) %in% c("Mock"))]
+############################################################
+################### IMPORT ASV TABLE ########################
+############################################################
 
-############### ############### ############### ############### 
-###############    Rarefaction and Diversity    ###############
-############### ############### ############### ############### 
+# The BIOM file contains the ASV abundance table.
+#
+# Rows = ASVs
+# Columns = samples
+#
+# Values = number of sequencing reads assigned to each ASV
+# in each sample.
 
-# now that we have a CLEAN OTU table, what do you do?
-# some questions you might want to answer: what is the composition like within a sample? Across samples?
 
-# if so, look at diversity metrics 
-# alpha: average species diversity in a habitat or specific area. Alpha diversity is a local measure.
-# beta: ratio between regional and local species diversity. differentiation among samples
+biom_object <- read_biom(
+  table_file
+)
 
-# first need to do rarefaction
-# Rarefying - normalizes read depth across all samples. 
-# Allows for an equal comparison across different sample types, at the risk of excluding rarer taxa
-# A "good" rarefaction depth should minimize sample loss while maximizing OTU richness.
 
-# get quartile ranges for rarefaction
-transOTU <- rowSums(t(finalOTU)) 
-Q10 <- quantile(transOTU[order(transOTU, decreasing = TRUE)], 0.10)
-Q15 <- quantile(transOTU[order(transOTU, decreasing = TRUE)], 0.15)
+# Extract the abundance matrix from the BIOM object.
 
-# we can use these numbers to set a range (e.g., Q10) to keep samples at that depth (e.g., 90th percentile)
-barplot(sort(transOTU), ylim = c(0, max(transOTU)), 
-        xlim = c(0, NROW(transOTU)), col = "Blue", ylab = "Read Depth", xlab = "Sample") 
-abline(h = c(Q10, Q15), col = c("red", "pink"))
-plot.new()
+ASV_table <- as.matrix(
+  biom_data(biom_object)
+)
 
-# did we sequence each sample adequately? - ideally, you see the lines plateau meaning you sampled the community!
-# if not, you may need to sequencer to greater depth for each sample (if lines are linear)
-rarecurve(t(finalOTU), step = 100, cex = 0.5)
-abline(v = c(Q10, Q15), col = c("red", "pink"))
 
-# you will need to make a BIG decision here on where to draw the rarefaction cutoff
-# samples to the left of the red or pink lines will be thrown out
-rared_OTU <- as.data.frame((rrarefy.perm(t(finalOTU), sample = Q10, n = 100, round.out = T)))
+# Inspect it.
 
-# This only keeps the samples that meet the rarefaction cutoff.
-rared_OTU <- as.data.frame(rared_OTU[rowSums(rared_OTU) >= Q10 - (Q10 * 0.1), colSums(rared_OTU) >= 1])
+dim(ASV_table)
 
-############### ############### ############### 
-############### Alpha diversity ###############
-############### ############### ############### 
-# Alpha diversity is a measure of species richness within an environment.
-# LOCAL SCALE == each sample will have its own alpha diversity score
-# there are several methods to calculate this
-# two popular approaches:
-# Shannon - strongly influences by species richness == rare species, sensitive to diversity changes
-# Simpson's - weighted more by evenness and common species
-?diversity
+ASV_table[1:5, 1:5]
 
-# outside of this, we can look at the richness of each sample, or how many taxa are in each sample
-richness <- as.data.frame(specnumber(rared_OTU))
-colnames(richness) <- c("speciesrich")
-# Merge with metadata to create a plot.
-merged_rich <- merge(richness, metadata, by = 0)
-rownames(merged_rich) <- merged_rich$Row.names
-merged_rich$Row.names <- NULL
 
-# now for alpha diversity
-# we will use Shannon diversity as a method of alpha-diversity.
-shannon <- as.data.frame(diversity(rared_OTU, index = "shannon"))
-colnames(shannon) <- c("alpha_shannon")
+# How many ASVs?
 
-# Merge with metadata to create a plot.
-merged_alpha <- merge(merged_rich, shannon, by = 0)
+nrow(ASV_table)
 
-#Plotting alpha diversity:
-#Change 'factor_X' to categorical metadata factor you wish to plot. Press tab after the '$' sign.
-factor_X <- as.factor(merged_alpha$timepoint)
 
-#plot richness
-p1 <- ggplot(data = merged_alpha) +
-  aes(x = factor_X, y = merged_alpha$speciesrich, 
-      fill = factor_X) +
-  geom_boxplot(outlier.shape = NA, lwd = 1) +
-  labs(title = 'Species Richness',
-       #Change x-axis label and legend title to metadata factor of interest.
-       x = 'Time point', y = 'Species Richness', fill = 'Time point') +
-  theme_classic(base_size = 14, base_line_size = 1) +
-  geom_jitter(width = .2) +
-  theme(legend.position = "none")
+# How many samples?
 
-# preview the figure
-p1
+ncol(ASV_table)
 
-# plot alpha diversity
-p2 <- ggplot(data = merged_alpha) +
-  aes(x = factor_X, y = merged_alpha$alpha_shannon, 
-      fill = factor_X) +
-  geom_boxplot(outlier.shape = NA, lwd = 1) +
-  labs(title = 'Alpha Diversity',
-       #Change x-axis label and legend title to metadata factor of interest.
-       x = 'Time point', y = 'Shannon Diversity Index', fill = 'Time point') +
-  theme_classic(base_size = 14, base_line_size = 1) +
-  geom_jitter(width = .2) +
-  theme(legend.position = "none")
 
-# might need to install - install.packages("gridExtra")
-library(gridExtra)
+############################################################
+################### CHECK SAMPLE IDS ########################
+############################################################
 
-# this will save a PDF file of the two figure side by side showing richness and alpha-diversity
-pdf("alpha-diversity.pdf", width = 12, height = 10)
-grid.arrange(p1, p2, ncol = 2)
+# Before doing ANY analysis, make sure the sample names in
+# the abundance table match the metadata.
+#
+# This is an extremely important check.
+
+
+samples_missing_metadata <- setdiff(
+  colnames(ASV_table),
+  rownames(metadata)
+)
+
+
+samples_missing_table <- setdiff(
+  rownames(metadata),
+  colnames(ASV_table)
+)
+
+
+samples_missing_metadata
+
+samples_missing_table
+
+
+# Every sample in the ASV table should have metadata.
+
+if (length(samples_missing_metadata) > 0) {
+
+  stop(
+    "Some samples in the ASV table do not occur in the metadata."
+  )
+
+}
+
+
+############################################################
+#################### REMOVE CONTROLS ########################
+############################################################
+
+# Our metadata contain a mock-community control.
+#
+# Mock communities are extremely useful for checking whether
+# sequencing and bioinformatic processing worked as expected.
+#
+# However, they are NOT ecological samples and should not be
+# included in our ecological analyses.
+
+
+samples_to_remove <- c(
+  "Mock"
+)
+
+
+samples_to_remove <- intersect(
+  samples_to_remove,
+  colnames(ASV_table)
+)
+
+
+ASV_table <- ASV_table[
+  ,
+  !(colnames(ASV_table) %in% samples_to_remove),
+  drop = FALSE
+]
+
+
+# Now reorder the metadata so that its rows are in exactly the
+# same order as the columns of the ASV table.
+
+metadata <- metadata[
+  colnames(ASV_table),
+  ,
+  drop = FALSE
+]
+
+
+# Confirm that everything matches.
+
+identical(
+  colnames(ASV_table),
+  rownames(metadata)
+)
+
+
+############################################################
+#################### IMPORT TAXONOMY ########################
+############################################################
+
+# taxonomy.tsv contains the inferred taxonomy for each ASV.
+
+taxonomy_raw <- read.delim(
+  taxonomy_file,
+  row.names = 1,
+  check.names = FALSE,
+  stringsAsFactors = FALSE
+)
+
+
+head(taxonomy_raw)
+
+
+# Every ASV in our abundance table should have a taxonomic
+# record.
+
+if (!all(
+  rownames(ASV_table) %in% rownames(taxonomy_raw)
+)) {
+
+  stop(
+    "Some ASVs in the abundance table are missing from the taxonomy file."
+  )
+
+}
+
+
+# Put taxonomy into the same order as the ASV table.
+
+taxonomy_raw <- taxonomy_raw[
+  rownames(ASV_table),
+  ,
+  drop = FALSE
+]
+
+
+############################################################
+################ PARSE TAXONOMIC RANKS ######################
+############################################################
+
+# QIIME 2 stores the entire taxonomic classification in one
+# semicolon-separated string.
+#
+# For example:
+#
+# Bacteria; Firmicutes; Clostridia; ...
+#
+# We will split that string into separate taxonomic ranks.
+
+
+taxonomy_matrix <- str_split_fixed(
+  taxonomy_raw$Taxon,
+  pattern = ";",
+  n = 7
+)
+
+
+taxonomy_matrix[] <- str_trim(
+  taxonomy_matrix
+)
+
+
+colnames(taxonomy_matrix) <- c(
+  "Kingdom",
+  "Phylum",
+  "Class",
+  "Order",
+  "Family",
+  "Genus",
+  "Species"
+)
+
+
+taxonomy <- as.data.frame(
+  taxonomy_matrix,
+  stringsAsFactors = FALSE
+)
+
+
+rownames(taxonomy) <- rownames(
+  taxonomy_raw
+)
+
+
+head(taxonomy)
+
+
+############################################################
+#################### FILTER TAXONOMY ########################
+############################################################
+
+# 16S primers can amplify sequences that we do not want in
+# our bacterial/archaeal community analysis.
+#
+# Chloroplasts and mitochondria are particularly important
+# because their evolutionary history includes bacterial
+# ancestors and their ribosomal genes can be amplified by
+# bacterial 16S primers.
+#
+# We will remove:
+#
+#   chloroplast
+#   mitochondria
+#   Eukaryota
+#
+#
+# IMPORTANT:
+#
+# We will NOT automatically remove every "unclassified" ASV.
+#
+# Failure to classify something to genus/species does not
+# mean that the sequence is biologically meaningless.
+
+
+exclude_taxa <- grepl(
+  "chloroplast|mitochondria|eukaryota",
+  taxonomy_raw$Taxon,
+  ignore.case = TRUE
+)
+
+
+# How many ASVs will be removed?
+
+sum(exclude_taxa)
+
+
+# Keep target ASVs.
+
+ASV_table <- ASV_table[
+  !exclude_taxa,
+  ,
+  drop = FALSE
+]
+
+
+taxonomy <- taxonomy[
+  !exclude_taxa,
+  ,
+  drop = FALSE
+]
+
+
+taxonomy_raw <- taxonomy_raw[
+  !exclude_taxa,
+  ,
+  drop = FALSE
+]
+
+
+# Remove any ASVs that now have zero reads.
+
+keep_ASVs <- rowSums(ASV_table) > 0
+
+ASV_table <- ASV_table[
+  keep_ASVs,
+  ,
+  drop = FALSE
+]
+
+taxonomy <- taxonomy[
+  keep_ASVs,
+  ,
+  drop = FALSE
+]
+
+
+# How many ASVs remain?
+
+nrow(ASV_table)
+
+
+############################################################
+############ WHAT DOES "CLASSIFIED" MEAN? ###################
+############################################################
+
+# Classification success depends on:
+#
+#   - the 16S region sequenced
+#   - reference database
+#   - classifier
+#   - organisms actually present
+#
+# We can ask how many ASVs received a genus-level label.
+
+
+genus_assigned <- !is.na(taxonomy$Genus) &
+  taxonomy$Genus != "" &
+  !taxonomy$Genus %in% c(
+    "g__",
+    "g__unidentified",
+    "Unassigned"
+  )
+
+
+# Percent of ASVs assigned to genus:
+
+mean(genus_assigned) * 100
+
+
+# But there is another way to ask the same question:
+#
+# What percentage of all SEQUENCING READS belong to ASVs
+# classified to genus?
+
+
+ASV_total_abundance <- rowSums(
+  ASV_table
+)
+
+
+sum(
+  ASV_total_abundance[genus_assigned]
+) /
+  sum(ASV_total_abundance) *
+  100
+
+
+# These two percentages do not necessarily tell us the same
+# thing.
+
+
+############################################################
+############### SEQUENCING DEPTH ############################
+############################################################
+
+# Before calculating diversity, examine how many sequencing
+# reads were recovered from each sample.
+
+
+sample_depth <- colSums(
+  ASV_table
+)
+
+
+summary(
+  sample_depth
+)
+
+
+sort(
+  sample_depth
+)
+
+
+# Put sequencing depth into a data frame for plotting.
+
+depth_data <- data.frame(
+  sample_id = names(sample_depth),
+  reads = sample_depth,
+  metadata,
+  check.names = FALSE
+)
+
+
+############################################################
+############### VISUALIZE SEQUENCING DEPTH ##################
+############################################################
+
+# We will calculate the 10th percentile as a useful VISUAL
+# reference.
+#
+# Approximately 90% of samples have at least this many reads.
+#
+# This is NOT automatically the "correct" rarefaction depth.
+
+
+candidate_depth <- floor(
+  quantile(
+    sample_depth,
+    probs = 0.10
+  )
+)
+
+
+candidate_depth
+
+
+sum(
+  sample_depth >= candidate_depth
+)
+
+
+p_depth <- ggplot(
+  depth_data,
+  aes(
+    x = reorder(sample_id, reads),
+    y = reads
+  )
+) +
+  geom_col() +
+  geom_hline(
+    yintercept = candidate_depth,
+    linetype = 2
+  ) +
+  labs(
+    title = "Sequencing depth among samples",
+    subtitle = paste(
+      "Dashed line = 10th percentile (",
+      candidate_depth,
+      " reads)",
+      sep = ""
+    ),
+    x = "Sample",
+    y = "Reads"
+  ) +
+  theme_classic() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  )
+
+
+p_depth
+
+
+ggsave(
+  filename = file.path(
+    OUTPUT_DIR,
+    "sequencing-depth.pdf"
+  ),
+  plot = p_depth,
+  width = 8,
+  height = 5
+)
+
+
+############################################################
+################# RAREFACTION CURVES ########################
+############################################################
+
+# Rarefaction curves ask:
+#
+# As we sample more sequences from this library, how quickly
+# do we continue detecting new ASVs?
+#
+# Flattening of the curve means that additional sequencing
+# is producing progressively fewer NEW OBSERVED ASVs.
+#
+# It does NOT prove that we recovered every organism that was
+# actually present in the biological community.
+
+
+pdf(
+  file.path(
+    OUTPUT_DIR,
+    "rarefaction-curves.pdf"
+  ),
+  width = 8,
+  height = 6
+)
+
+
+rarecurve(
+  t(ASV_table),
+  step = 500,
+  label = FALSE,
+  xlab = "Sequencing depth",
+  ylab = "Observed ASVs"
+)
+
+
+abline(
+  v = candidate_depth,
+  lty = 2
+)
+
+
 dev.off()
 
 
-# we can also test the significance among group means. Note the p-values.
-# whatever your question, you can change factor_X to metadata category of interest (i.e. timepoint).
-TukeyHSD(aov(formula = merged_alpha$alpha_shannon ~ factor_X))
+############################################################
+################### RAREFACTION #############################
+############################################################
 
-# IMPORTANT REMINDER
-# alpha-diversity questions must answer your biological question in your own system
-# Does a particular treatment lead to an increase or decrease in microbial richness?
-# How does species richness vary across different cages (batch effects)?
-
-############### ############### ############### 
-###############  Beta diversity ###############
-############### ############### ############### 
-# Beta diversity measures the change in diversity of species from one environment to another.
-# Dissimilarity Matrix - Samples on both axes are scored based how similar of dissimilar they are
-# Dissimilarity matrix is then visualized and tested for significance.
-
-# Bray Curtis - quantify the compositional dissimilarity between two different sites, based on counts at each site
-?vegdist
-
-# visualize dissimiarlity between samples or sites
-# ordination plot - multiple versions dealing with compression of multivariate data 
-
-# This will make our bray cutris distance matrix using the rarfied OTU table automatically.
-# alternatively, you can run vegdist first, then use that dissimilarity matrix for the input to metaMDS
-# now run an NMDS, which is a form of ordination and can be used to visualize beta diversity.
-# you can look at other ordination methods such as PCoA 
-NMDS1 <- metaMDS(rared_OTU, distance = "bray", k = 2, trymax = 500)
-
-# Extract the two axes of the NMDS to plot the x and y coordinates
-coordinates <- data.frame(NMDS1$points[,1:2])
-
-# Quick glance at the NMDS plot
-# not too exciting right? well we need to add metadata!!
-plot(x = coordinates$MDS1, y = coordinates$MDS2)
-
-# so merge NMDS axes coordinates with metadata
-nmds_plus_metadata <- merge(coordinates, metadata, by = 0)
-
-# choose the factor you are interested in (this time let's check the "treatment" effects)
-Factor_x <- as.factor(nmds_plus_metadata$treatment)
-
-# Plot
-ggplot(data = nmds_plus_metadata) +
-  aes(x = MDS1, y = MDS2, color = treatment)+ #Creates and colors legend to match, modify after $ here.
-  geom_point(size = 3) +
-  labs(col = "Treatment") + #Renames legend, modifiable. 
-  theme_bw()
-
-# for statistical tests, we need to get the data tidied up a bit
-# so let's subset the metadata and keeps only the samples that passed filtering and rarefaction
-filtersamples <- rownames(rared_OTU)
-filtermeta <- subset(metadata, rownames(metadata) %in% filtersamples)
-
-# Now test for differences among beta-diversity
-# one thing we can do is a permanova (permutational ANOVA) 
-# permutated analysis of variance, or a type of statistical test, useful for large multivariate analyses.
-#Note: this may not be the proper statistical test for your hypothesis, but is a good place to start for microbiome data.
-
-# let's check out the function in R that does this - you can brush up on the stats in the bottom right
-?adonis
-
-# try some different factors
-adonis(data = filtermeta, formula = rared_OTU ~ treatment 
-       / individual + timepoint + timepoint:treatment,
-       permutations = 999, method = "bray")
-
-adonis(data = filtermeta, formula = rared_OTU ~ treatment
-       /individual/timepoint,
-       permutations = 999, method = "bray")
-
-# again, the adonis test is dependent on what you think is happening in the microbiomes so adjsut accordingly
-
-# if we want we can go back to our plot and add these results in
-# To replot: 
-# Change the R2 and p-value numbers to match!
-ggplot(data = nmds_plus_metadata) +
-  aes(x = MDS1, y = MDS2, color = Factor_x) + #Creates and colors legend to match, modify after $.
-  geom_point() +
-  labs(col = "Treatment") + #Renames legend, modifiable within quotes.
-  ggtitle("NMDS of Treatment on Mice Microbiome", subtitle = bquote(~R^2~ '= 0.0, p = 0.99')) +#Adds tittle and subtittle. Can modify p and r-squared values + title.
-  theme_classic(base_size = 14, base_line_size = .5)
+# Rarefaction is NOT a universal normalization procedure.
+#
+# Whether rarefaction is appropriate depends on the question
+# being asked.
+#
+# Here we will use rarefaction for comparing observed
+# richness and Shannon diversity at a common sequencing
+# depth.
+#
+# For this workshop, we will use the 10th percentile depth
+# calculated above.
+#
+# In a real analysis, this choice should be made after
+# inspecting:
+#
+#   - sequencing-depth distribution
+#   - rarefaction curves
+#   - experimental design
+#   - which samples would be lost
 
 
+RAREFACTION_DEPTH <- candidate_depth
 
-# that's it!!!
 
-# but you are far from done exploiting all R has to offer.
-# check out the million other things in R
+# Samples below this depth cannot be rarefied to it.
 
-# here are some related microbiome analyses out there, but feel free to look for yourself!
+keep_samples <- sample_depth >= RAREFACTION_DEPTH
 
-# shiny apps - makes R interactive!!!
-# one of these are to check taxa barplots
-library(shiny)
-runGitHub("taxonomy_solution","swandro")
 
-# can also convert your data into phyloseq objects
-# this is a really nice package that you can import straight from DADA2 if you run it through R
-# try it with phyloseq built-in dataset
-data(GlobalPatterns)
+table(
+  keep_samples
+)
 
-# prune OTUs that are not present in at least one sample
-GP <- prune_taxa(taxa_sums(GlobalPatterns) > 0, GlobalPatterns)
-# Define a human-associated versus non-human categorical variable:
-human <- get_variable(GP, "SampleType") %in% c("Feces", "Mock", "Skin", "Tongue")
-# Add new human variable to sample data:
-sample_data(GP)$human <- factor(human)
 
-alpha_meas = c("Observed", "Chao1", "ACE", "Shannon", "Simpson", "InvSimpson")
-(p <- plot_richness(GP, "human", "SampleType", measures=alpha_meas))
-p + geom_boxplot(data=p$data, aes(x=human, y=value, color=NULL), alpha=0.1)
+# vegan expects:
+#
+# rows    = samples
+# columns = ASVs
+#
+# Our ASV table currently has the opposite orientation,
+# so we transpose it.
 
+
+community_counts <- t(
+  ASV_table[
+    ,
+    keep_samples,
+    drop = FALSE
+  ]
+)
+
+
+# Random subsampling means that results can differ slightly
+# from one run to another.
+#
+# set.seed() makes the random subsampling reproducible.
+
+set.seed(123)
+
+
+community_rare <- rrarefy(
+  community_counts,
+  sample = RAREFACTION_DEPTH
+)
+
+
+# Remove ASVs that disappeared completely after rarefaction.
+
+community_rare <- community_rare[
+  ,
+  colSums(community_rare) > 0,
+  drop = FALSE
+]
+
+
+# Metadata corresponding to retained samples.
+
+metadata_rare <- metadata[
+  rownames(community_rare),
+  ,
+  drop = FALSE
+]
+
+
+############################################################
+################### ALPHA DIVERSITY #########################
+############################################################
+
+# Alpha diversity describes diversity WITHIN each sample.
+#
+# Different metrics measure different aspects of diversity.
+#
+#
+# OBSERVED RICHNESS
+#
+# How many ASVs were detected?
+#
+#
+# SHANNON DIVERSITY
+#
+# Incorporates both the number of ASVs and how evenly reads
+# are distributed among them.
+
+
+richness <- specnumber(
+  community_rare
+)
+
+
+shannon <- diversity(
+  community_rare,
+  index = "shannon"
+)
+
+
+# Combine these values with the sample metadata.
+
+alpha_data <- data.frame(
+  sample_id = rownames(community_rare),
+  richness = richness,
+  shannon = shannon,
+  metadata_rare,
+  check.names = FALSE
+)
+
+
+# Treat these metadata variables as categories.
+
+alpha_data$timepoint <- factor(
+  alpha_data$timepoint,
+  levels = c(
+    "0",
+    "1",
+    "2",
+    "6"
+  )
+)
+
+
+alpha_data$treatment <- factor(
+  alpha_data$treatment
+)
+
+
+############################################################
+################ PLOT ALPHA DIVERSITY #######################
+############################################################
+
+p_richness <- ggplot(
+  alpha_data,
+  aes(
+    x = timepoint,
+    y = richness,
+    fill = treatment
+  )
+) +
+  geom_boxplot(
+    outlier.shape = NA
+  ) +
+  geom_point(
+    position = position_jitterdodge(
+      jitter.width = 0.15,
+      dodge.width = 0.75
+    ),
+    size = 1.5,
+    alpha = 0.7
+  ) +
+  labs(
+    title = "Observed ASV richness",
+    x = "Time point",
+    y = "Observed ASVs",
+    fill = "Treatment"
+  ) +
+  theme_classic()
+
+
+p_shannon <- ggplot(
+  alpha_data,
+  aes(
+    x = timepoint,
+    y = shannon,
+    fill = treatment
+  )
+) +
+  geom_boxplot(
+    outlier.shape = NA
+  ) +
+  geom_point(
+    position = position_jitterdodge(
+      jitter.width = 0.15,
+      dodge.width = 0.75
+    ),
+    size = 1.5,
+    alpha = 0.7
+  ) +
+  labs(
+    title = "Shannon diversity",
+    x = "Time point",
+    y = "Shannon diversity",
+    fill = "Treatment"
+  ) +
+  theme_classic()
+
+
+p_richness
+
+p_shannon
+
+
+alpha_plots <- arrangeGrob(
+  p_richness,
+  p_shannon,
+  ncol = 2
+)
+
+
+ggsave(
+  filename = file.path(
+    OUTPUT_DIR,
+    "alpha-diversity.pdf"
+  ),
+  plot = alpha_plots,
+  width = 12,
+  height = 5
+)
+
+
+# Save the values too.
+
+write.csv(
+  alpha_data,
+  file.path(
+    OUTPUT_DIR,
+    "alpha-diversity-values.csv"
+  ),
+  row.names = FALSE
+)
+
+
+############################################################
+############### A NOTE ABOUT STATISTICS #####################
+############################################################
+
+# The original version of this workshop used:
+#
+# aov()
+# TukeyHSD()
+#
+# to compare these values among groups.
+#
+# We will NOT do that here.
+#
+# WHY?
+#
+# The same individual mice were sampled repeatedly through
+# time.
+#
+# Samples from the same mouse are therefore NOT independent.
+#
+# A formal statistical analysis of these alpha-diversity
+# values should use a model that reflects that repeated-
+# measures design.
+#
+# Choosing the correct statistical model is part of the
+# biological analysis, not simply a software decision.
+
+
+############################################################
+################### BETA DIVERSITY ##########################
+############################################################
+
+# Beta diversity describes differences in community
+# composition AMONG samples.
+#
+# We now need to make two decisions:
+#
+#   1. How should abundance be transformed?
+#   2. How should differences among samples be measured?
+#
+#
+# Here we will:
+#
+#   - convert counts to relative abundance
+#   - square-root those relative abundances
+#   - calculate Bray-Curtis dissimilarity
+#
+#
+# The square-root relative-abundance transformation is also
+# called a Hellinger transformation.
+#
+# It reduces the influence of extremely abundant ASVs while
+# retaining abundance information.
+
+
+community_counts <- t(
+  ASV_table
+)
+
+
+community_hellinger <- decostand(
+  community_counts,
+  method = "hellinger"
+)
+
+
+############################################################
+################ BRAY-CURTIS DISTANCE #######################
+############################################################
+
+# Bray-Curtis ranges from:
+#
+# 0 = identical composition
+#
+# toward
+#
+# 1 = increasingly different composition
+#
+# It considers abundance but does not incorporate phylogenetic
+# relationships among ASVs.
+
+
+bray_distance <- vegdist(
+  community_hellinger,
+  method = "bray"
+)
+
+
+bray_distance
+
+
+############################################################
+######################## NMDS ###############################
+############################################################
+
+# A distance matrix contains pairwise differences among every
+# pair of samples.
+#
+# That is difficult to visualize directly.
+#
+# Ordination methods reduce those multivariate relationships
+# to a small number of dimensions.
+#
+# Here we use:
+#
+# Non-metric Multidimensional Scaling (NMDS)
+#
+#
+# NMDS tries to preserve the RANK ORDER of the pairwise
+# distances among samples.
+
+
+set.seed(123)
+
+
+NMDS <- metaMDS(
+  bray_distance,
+  k = 2,
+  trymax = 200,
+  autotransform = FALSE,
+  trace = FALSE
+)
+
+
+NMDS
+
+
+# Stress describes how well the low-dimensional NMDS
+# represents the original distance relationships.
+#
+# Lower stress generally indicates a better representation.
+
+NMDS$stress
+
+
+############################################################
+################ EXTRACT NMDS COORDINATES ###################
+############################################################
+
+nmds_coordinates <- as.data.frame(
+  scores(
+    NMDS,
+    display = "sites"
+  )
+)
+
+
+nmds_coordinates$sample_id <- rownames(
+  nmds_coordinates
+)
+
+
+# Add metadata.
+
+nmds_data <- data.frame(
+  nmds_coordinates,
+  metadata[
+    rownames(nmds_coordinates),
+    ,
+    drop = FALSE
+  ],
+  check.names = FALSE
+)
+
+
+nmds_data$timepoint <- factor(
+  nmds_data$timepoint,
+  levels = c(
+    "0",
+    "1",
+    "2",
+    "6"
+  )
+)
+
+
+############################################################
+###################### PLOT NMDS ############################
+############################################################
+
+p_nmds <- ggplot(
+  nmds_data,
+  aes(
+    x = NMDS1,
+    y = NMDS2,
+    color = treatment,
+    shape = timepoint
+  )
+) +
+  geom_point(
+    size = 3
+  ) +
+  labs(
+    title = "Mouse microbiome composition",
+    subtitle = paste(
+      "Bray-Curtis NMDS; stress =",
+      round(NMDS$stress, 3)
+    ),
+    color = "Treatment",
+    shape = "Time point"
+  ) +
+  theme_classic()
+
+
+p_nmds
+
+
+ggsave(
+  filename = file.path(
+    OUTPUT_DIR,
+    "bray-curtis-NMDS.pdf"
+  ),
+  plot = p_nmds,
+  width = 8,
+  height = 6
+)
+
+
+############################################################
+#################### IMPORTANT ##############################
+############################################################
+
+# Samples appearing separated in an ordination plot do NOT
+# automatically demonstrate a statistically significant
+# biological difference.
+#
+# An ordination is a VISUALIZATION of the distance matrix.
+#
+# Statistical inference requires a separate analysis.
+
+
+############################################################
+####################### PERMANOVA ###########################
+############################################################
+
+# PERMANOVA asks whether community composition is associated
+# with one or more explanatory variables.
+#
+# Current vegan uses adonis2().
+#
+# But the permutation design must reflect the experimental
+# design.
+#
+#
+# This dataset contains repeated samples from individual mice.
+#
+# Therefore, if we want to test change THROUGH TIME using all
+# observations, we should not freely shuffle samples among
+# different individuals.
+
+
+metadata_beta <- metadata[
+  rownames(community_hellinger),
+  ,
+  drop = FALSE
+]
+
+
+metadata_beta$timepoint <- factor(
+  metadata_beta$timepoint,
+  levels = c(
+    "0",
+    "1",
+    "2",
+    "6"
+  )
+)
+
+
+metadata_beta$individual <- factor(
+  metadata_beta$individual
+)
+
+
+############################################################
+######## EXAMPLE 1: CHANGE THROUGH TIME #####################
+############################################################
+
+# Restrict permutations within each individual mouse.
+#
+# This respects the fact that samples from the same animal
+# are related observations.
+
+
+permanova_time <- adonis2(
+  bray_distance ~ timepoint,
+  data = metadata_beta,
+  permutations = 999,
+  strata = metadata_beta$individual
+)
+
+
+permanova_time
+
+
+############################################################
+###### EXAMPLE 2: TREATMENT AT ONE TIME POINT ###############
+############################################################
+
+# Treatment is a BETWEEN-MOUSE variable.
+#
+# Restricting permutations within individual mice would make
+# no sense for testing treatment because an individual mouse
+# never changes treatment.
+#
+# One simple demonstration is therefore to compare treatment
+# groups at ONE time point.
+#
+# Here we use the final time point.
+#
+# This is still only an example model. A complete biological
+# analysis would also consider the actual experimental design
+# and potential covariates/confounding variables.
+
+
+final_time <- "6"
+
+
+final_samples <- rownames(
+  metadata_beta
+)[
+  metadata_beta$timepoint == final_time
+]
+
+
+community_final <- community_hellinger[
+  final_samples,
+  ,
+  drop = FALSE
+]
+
+
+metadata_final <- droplevels(
+  metadata_beta[
+    final_samples,
+    ,
+    drop = FALSE
+  ]
+)
+
+
+bray_final <- vegdist(
+  community_final,
+  method = "bray"
+)
+
+
+permanova_treatment <- adonis2(
+  bray_final ~ treatment,
+  data = metadata_final,
+  permutations = 999
+)
+
+
+permanova_treatment
+
+
+############################################################
+####################### PERMDISP ############################
+############################################################
+
+# PERMANOVA is often interpreted as testing whether groups
+# have different multivariate locations ("centroids").
+#
+# However, differences in WITHIN-GROUP DISPERSION can also
+# affect interpretation.
+#
+# vegan provides betadisper() to examine this.
+#
+# Think of this roughly as the multivariate analogue of
+# checking whether groups differ in variance.
+
+
+dispersion_treatment <- betadisper(
+  bray_final,
+  metadata_final$treatment
+)
+
+
+# Permutation test for differences in dispersion.
+
+permutest(
+  dispersion_treatment,
+  permutations = 999
+)
+
+
+# Visualize distances to group medians.
+
+boxplot(
+  dispersion_treatment,
+  xlab = "Treatment",
+  ylab = "Distance to group median"
+)
+
+
+############################################################
+############ TAXONOMIC COMPOSITION ##########################
+############################################################
+
+# Diversity metrics deliberately reduce the community into
+# summary values or pairwise distances.
+#
+# But sometimes we want to know:
+#
+# WHICH TAXA ARE ACTUALLY THERE?
+#
+# We will collapse ASVs to the phylum level and calculate
+# relative sequence abundance.
+
+
+# First clean up taxonomic prefixes such as:
+#
+# p__Firmicutes
+#
+# so they display simply as:
+#
+# Firmicutes
+
+
+clean_taxonomy_label <- function(x) {
+
+  x <- str_trim(x)
+
+  x <- sub(
+    "^[A-Za-z]__",
+    "",
+    x
+  )
+
+  x[
+    is.na(x) |
+      x == ""
+  ] <- "Unclassified"
+
+  x
+
+}
+
+
+phylum <- clean_taxonomy_label(
+  taxonomy$Phylum
+)
+
+
+############################################################
+############### COLLAPSE ASVs BY PHYLUM #####################
+############################################################
+
+# rowsum() adds together all ASVs assigned to the same phylum.
+
+phylum_counts <- rowsum(
+  ASV_table,
+  group = phylum,
+  reorder = FALSE
+)
+
+
+############################################################
+############### RELATIVE SEQUENCE ABUNDANCE #################
+############################################################
+
+# Each sample has a different sequencing depth.
+#
+# For visualization, divide each ASV count by the total number
+# of reads in that sample.
+#
+# Each sample will therefore sum to 1.
+
+
+phylum_relative <- sweep(
+  phylum_counts,
+  2,
+  colSums(phylum_counts),
+  "/"
+)
+
+
+colSums(
+  phylum_relative
+)
+
+
+############################################################
+#################### TOP PHYLA ##############################
+############################################################
+
+# Showing dozens of extremely rare phyla makes a stacked
+# bar plot difficult to interpret.
+#
+# We will show the 10 most abundant phyla across the dataset
+# and combine the rest as "Other".
+
+
+mean_phylum_abundance <- rowMeans(
+  phylum_relative
+)
+
+
+N_TOP_PHYLA <- min(
+  10,
+  nrow(phylum_relative)
+)
+
+
+top_phyla <- names(
+  sort(
+    mean_phylum_abundance,
+    decreasing = TRUE
+  )
+)[
+  seq_len(N_TOP_PHYLA)
+]
+
+
+phylum_group <- ifelse(
+  rownames(phylum_relative) %in% top_phyla,
+  rownames(phylum_relative),
+  "Other"
+)
+
+
+phylum_plot_table <- rowsum(
+  phylum_relative,
+  group = phylum_group,
+  reorder = FALSE
+)
+
+
+############################################################
+############### CONVERT TABLE FOR GGPLOT ####################
+############################################################
+
+taxa_plot_data <- as.data.frame(
+  as.table(
+    as.matrix(phylum_plot_table)
+  ),
+  stringsAsFactors = FALSE
+)
+
+
+names(taxa_plot_data) <- c(
+  "Phylum",
+  "sample_id",
+  "relative_abundance"
+)
+
+
+taxa_plot_data$relative_abundance <- as.numeric(
+  taxa_plot_data$relative_abundance
+)
+
+
+taxa_plot_data$sample_id <- as.character(
+  taxa_plot_data$sample_id
+)
+
+
+# Add metadata.
+
+taxa_plot_data$treatment <- metadata[
+  taxa_plot_data$sample_id,
+  "treatment"
+]
+
+
+taxa_plot_data$timepoint <- metadata[
+  taxa_plot_data$sample_id,
+  "timepoint"
+]
+
+
+############################################################
+########### TAXONOMIC PLOT AT FINAL TIME POINT ##############
+############################################################
+
+# Plotting every sample at every time point would be crowded,
+# so for this example we will visualize the final time point.
+
+
+taxa_final <- taxa_plot_data[
+  taxa_plot_data$timepoint == final_time,
+  ,
+  drop = FALSE
+]
+
+
+p_taxa <- ggplot(
+  taxa_final,
+  aes(
+    x = sample_id,
+    y = relative_abundance,
+    fill = Phylum
+  )
+) +
+  geom_col(
+    width = 1
+  ) +
+  facet_grid(
+    . ~ treatment,
+    scales = "free_x",
+    space = "free_x"
+  ) +
+  scale_y_continuous(
+    labels = function(x) {
+      paste0(
+        round(x * 100),
+        "%"
+      )
+    }
+  ) +
+  labs(
+    title = "Taxonomic composition at the final time point",
+    x = "Individual samples",
+    y = "Relative sequence abundance",
+    fill = "Phylum"
+  ) +
+  theme_classic() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  )
+
+
+p_taxa
+
+
+ggsave(
+  filename = file.path(
+    OUTPUT_DIR,
+    "taxonomic-composition.pdf"
+  ),
+  plot = p_taxa,
+  width = 12,
+  height = 6
+)
+
+
+############################################################
+##################### PHYLOSEQ ##############################
+############################################################
+
+# Everything above deliberately used relatively transparent
+# matrices and data frames so that you could see what was
+# happening to the data.
+#
+# There are also packages designed specifically for storing
+# microbiome data.
+#
+# phyloseq can combine:
+#
+#   abundance table
+#   taxonomy
+#   metadata
+#   phylogenetic tree
+#
+# into one R object.
+
+
+suppressPackageStartupMessages(
+  library(phyloseq)
+)
+
+
+phyloseq_object <- phyloseq(
+
+  otu_table(
+    ASV_table,
+    taxa_are_rows = TRUE
+  ),
+
+  tax_table(
+    as.matrix(taxonomy)
+  ),
+
+  sample_data(
+    metadata
+  )
+
+)
+
+
+phyloseq_object
+
+
+# phyloseq contains many useful functions for filtering,
+# transforming, plotting, and organizing microbiome data.
+#
+# We will not rely on it for the core workshop because it is
+# important to understand what the underlying abundance
+# matrix and metadata are doing first.
+
+
+############################################################
+################## REPRODUCIBILITY ##########################
+############################################################
+
+# Software changes over time.
+#
+# sessionInfo() records the version of R and the packages used
+# for this analysis.
+#
+# This information should be retained for reproducibility.
+
+
+sessionInfo()
+
+
+############################################################
+######################## FINISHED ###########################
+############################################################
+
+# In this workflow we:
+#
+#   1. imported metadata, taxonomy, and an ASV table
+#   2. checked that sample IDs matched
+#   3. removed non-target sequences and controls
+#   4. examined sequencing depth
+#   5. used rarefaction for alpha-diversity comparisons
+#   6. calculated richness and Shannon diversity
+#   7. transformed community composition
+#   8. calculated Bray-Curtis dissimilarity
+#   9. visualized beta diversity with NMDS
+#  10. tested community differences with PERMANOVA
+#  11. examined dispersion with PERMDISP
+#  12. visualized taxonomic composition
+#
+#
+# The most important question throughout the workflow is:
+#
+# WHAT DOES THIS ANALYSIS MEASURE, AND DOES THAT MEASUREMENT
+# ACTUALLY ANSWER THE BIOLOGICAL QUESTION?
