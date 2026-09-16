@@ -1258,24 +1258,36 @@ ggsave(
 ####################### PERMANOVA ###########################
 ############################################################
 
-# PERMANOVA asks whether community composition is associated
-# with one or more explanatory variables.
+# PERMANOVA asks whether differences in community composition
+# are associated with one or more explanatory variables.
 #
-# Current vegan uses adonis2().
+# We already calculated Bray-Curtis dissimilarity from the:
 #
-# But the permutation design must reflect the experimental
-# design.
+#   rarefied
+#       ↓
+#   square-root transformed
 #
+# ASV abundance table.
+#
+# We will use that SAME distance matrix for statistical tests.
+#
+#
+# IMPORTANT:
+#
+# The permutation design must reflect the experimental design.
 #
 # This dataset contains repeated samples from individual mice.
-#
-# Therefore, if we want to test change THROUGH TIME using all
-# observations, we should not freely shuffle samples among
-# different individuals.
+# Samples collected from the same mouse are therefore NOT
+# independent observations.
 
+
+# Keep metadata only for samples that survived rarefaction.
+#
+# The row order of the metadata must match the row order of
+# the community table used to calculate Bray-Curtis.
 
 metadata_beta <- metadata[
-  rownames(community_hellinger),
+  rownames(community_sqrt),
   ,
   drop = FALSE
 ]
@@ -1297,14 +1309,32 @@ metadata_beta$individual <- factor(
 )
 
 
+metadata_beta$treatment <- factor(
+  metadata_beta$treatment
+)
+
+
+# Confirm that sample order matches.
+
+identical(
+  rownames(community_sqrt),
+  rownames(metadata_beta)
+)
+
+
 ############################################################
 ######## EXAMPLE 1: CHANGE THROUGH TIME #####################
 ############################################################
 
-# Restrict permutations within each individual mouse.
+# Here we ask:
 #
-# This respects the fact that samples from the same animal
-# are related observations.
+# Does microbial community composition change through time?
+#
+# Because the same mouse was sampled repeatedly, permutations
+# are restricted WITHIN individual mice.
+#
+# This prevents samples from being freely permuted among
+# different animals.
 
 
 permanova_time <- adonis2(
@@ -1317,43 +1347,43 @@ permanova_time <- adonis2(
 
 permanova_time
 
-
 ############################################################
 ###### EXAMPLE 2: TREATMENT AT ONE TIME POINT ###############
 ############################################################
 
-# Treatment is a BETWEEN-MOUSE variable.
+# Treatment is different from time.
 #
-# Restricting permutations within individual mice would make
-# no sense for testing treatment because an individual mouse
-# never changes treatment.
+# An individual mouse remains in the same treatment group,
+# so we cannot test treatment by restricting permutations
+# within individual mice.
 #
-# One simple demonstration is therefore to compare treatment
-# groups at ONE time point.
+# For a simple workshop example, we will instead compare
+# treatment groups at ONE time point.
 #
 # Here we use the final time point.
-#
-# This is still only an example model. A complete biological
-# analysis would also consider the actual experimental design
-# and potential covariates/confounding variables.
 
 
 final_time <- "6"
 
 
-final_samples <- rownames(
-  metadata_beta
-)[
+# Identify samples from the final time point.
+
+final_samples <- rownames(metadata_beta)[
   metadata_beta$timepoint == final_time
 ]
 
 
-community_final <- community_hellinger[
+# Subset the SAME square-root transformed community table
+# used above.
+
+community_final <- community_sqrt[
   final_samples,
   ,
   drop = FALSE
 ]
 
+
+# Subset the corresponding metadata.
 
 metadata_final <- droplevels(
   metadata_beta[
@@ -1364,11 +1394,24 @@ metadata_final <- droplevels(
 )
 
 
+# Confirm that the samples still match.
+
+identical(
+  rownames(community_final),
+  rownames(metadata_final)
+)
+
+
+# Calculate Bray-Curtis specifically among these samples.
+
 bray_final <- vegdist(
   community_final,
   method = "bray"
 )
 
+
+# Test whether community composition differs among
+# treatment groups at the final time point.
 
 permanova_treatment <- adonis2(
   bray_final ~ treatment,
@@ -1379,21 +1422,22 @@ permanova_treatment <- adonis2(
 
 permanova_treatment
 
-
 ############################################################
 ####################### PERMDISP ############################
 ############################################################
 
-# PERMANOVA is often interpreted as testing whether groups
-# have different multivariate locations ("centroids").
+# A significant PERMANOVA result is often interpreted as
+# evidence that groups differ in their multivariate location
+# ("centroid").
 #
-# However, differences in WITHIN-GROUP DISPERSION can also
-# affect interpretation.
+# However, groups can also differ in how variable or dispersed
+# their communities are.
 #
-# vegan provides betadisper() to examine this.
+# Differences in dispersion can affect the interpretation of
+# PERMANOVA.
 #
-# Think of this roughly as the multivariate analogue of
-# checking whether groups differ in variance.
+# betadisper() asks whether groups differ in their average
+# distance from the group centroid/median.
 
 
 dispersion_treatment <- betadisper(
@@ -1410,7 +1454,7 @@ permutest(
 )
 
 
-# Visualize distances to group medians.
+# Visualize distances to the group median.
 
 boxplot(
   dispersion_treatment,
@@ -1418,20 +1462,30 @@ boxplot(
   ylab = "Distance to group median"
 )
 
-
 ############################################################
 ############ TAXONOMIC COMPOSITION ##########################
 ############################################################
 
-# Diversity metrics deliberately reduce the community into
-# summary values or pairwise distances.
+# IMPORTANT:
 #
-# But sometimes we want to know:
+# We are now asking a DIFFERENT question.
 #
-# WHICH TAXA ARE ACTUALLY THERE?
+# For beta diversity, we rarefied and square-root transformed
+# the abundance data before calculating Bray-Curtis.
 #
-# We will collapse ASVs to the phylum level and calculate
-# relative sequence abundance.
+# For taxonomic composition, we want to visualize the
+# proportion of sequencing reads assigned to different taxa.
+#
+# We therefore return to the ORIGINAL FILTERED ASV COUNTS
+# and convert those counts to relative sequence abundance.
+#
+#
+# Diversity metrics reduce a community into summary values or
+# distances among samples.
+#
+# Taxonomic composition asks a different question:
+#
+# WHICH TAXA ARE ACTUALLY PRESENT, AND IN WHAT PROPORTIONS?
 
 
 # First clean up taxonomic prefixes such as:
@@ -1485,12 +1539,16 @@ phylum_counts <- rowsum(
 ############### RELATIVE SEQUENCE ABUNDANCE #################
 ############################################################
 
-# Each sample has a different sequencing depth.
+# Convert counts to relative sequence abundance so that
+# taxonomic composition can be compared among samples with
+# different total numbers of sequencing reads.
 #
-# For visualization, divide each ASV count by the total number
-# of reads in that sample.
+# IMPORTANT:
 #
-# Each sample will therefore sum to 1.
+# Relative sequence abundance is not necessarily equivalent
+# to relative cell abundance because 16S rRNA gene copy
+# number, DNA extraction, PCR, and other factors can affect
+# observed read abundance.
 
 
 phylum_relative <- sweep(
@@ -1715,6 +1773,14 @@ phyloseq_object
 # important to understand what the underlying abundance
 # matrix and metadata are doing first.
 
+# Notice that we build the phyloseq object from the ORIGINAL
+# filtered ASV counts.
+#
+# Transformations such as rarefaction, relative abundance,
+# or square-root transformation should generally be performed
+# for a particular analysis rather than permanently replacing
+# the underlying count data.
+
 
 ############################################################
 ################## REPRODUCIBILITY ##########################
@@ -1738,17 +1804,41 @@ sessionInfo()
 # In this workflow we:
 #
 #   1. imported metadata, taxonomy, and an ASV table
+#
 #   2. checked that sample IDs matched
+#
 #   3. removed non-target sequences and controls
-#   4. examined sequencing depth
-#   5. used rarefaction for alpha-diversity comparisons
-#   6. calculated richness and Shannon diversity
-#   7. transformed community composition
-#   8. calculated Bray-Curtis dissimilarity
-#   9. visualized beta diversity with NMDS
-#  10. tested community differences with PERMANOVA
-#  11. examined dispersion with PERMDISP
-#  12. visualized taxonomic composition
+#
+#   4. examined sequencing depth and rarefaction curves
+#
+#   5. selected a common sequencing depth
+#
+#   6. rarefied samples for diversity comparisons
+#
+#   7. calculated observed richness and Shannon diversity
+#
+#   8. square-root transformed rarefied ASV abundances
+#
+#   9. calculated Bray-Curtis dissimilarity
+#
+#  10. visualized beta diversity using NMDS
+#
+#  11. tested community differences using PERMANOVA
+#
+#  12. examined multivariate dispersion using PERMDISP
+#
+#  13. returned to the original counts to visualize
+#      relative taxonomic composition
+#
+#  14. combined abundance, taxonomy, and metadata into a
+#      phyloseq object
+#
+#
+# Notice that there was NOT one single "normalized dataset"
+# that we used for every analysis.
+#
+# Different ecological questions required different
+# treatments of the same underlying ASV abundance table.
 #
 #
 # The most important question throughout the workflow is:
