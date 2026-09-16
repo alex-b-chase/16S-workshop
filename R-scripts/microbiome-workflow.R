@@ -277,7 +277,7 @@ file.exists(biom_file)
 
 
 biom_object <- read_biom(
-  table_file
+  biom_file
 )
 
 
