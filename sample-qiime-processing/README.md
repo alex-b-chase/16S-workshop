@@ -146,7 +146,7 @@ requests 8 GB of memory and one CPU.
 A script can be submitted using:
 
 ```bash
-sbatch 01-import.slurm
+sbatch 01_qiime2-import.sh
 ```
 
 The exact partition, allocation, software environment, and file paths will differ among HPC systems. These scripts therefore should be treated as **examples that must be adapted to your computing environment**, not universally executable commands.
