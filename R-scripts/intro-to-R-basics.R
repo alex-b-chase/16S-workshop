@@ -1,188 +1,603 @@
-# Green text are comments and will be ignored when running code.
-rm(list=ls())
+############################################################
+##################### INTRODUCTION TO R #####################
+############################################################
 
-# open-source statistical software 
-# large number of “packages” for R freely downloadable from [CRAN](http://cran.us.r-project.org/) (Comprehensive R Archive Network) 
-# individual packages do pretty much everything!
+# Lines beginning with # are comments.
+# R ignores comments when running code.
+#
+# To run a line of code:
+#   Windows: Ctrl + Enter
+#   Mac:     Command + Enter
+#
+# You can also highlight several lines and run them together.
+#
+# Results and messages will appear in the Console.
 
-# R basics
-# R (unlike other languages) does not care about spaces between functions
+
+############################################################
+####################### R BASICS ############################
+############################################################
+
+# R can be used like a calculator.
+
+3 + 12
+10 / 2
+2^3
+
+
+# R generally ignores spaces around operators.
+# These commands do exactly the same thing:
+
 3+12
 3 + 12
 
-# assign variables into the R environment
-z = 5
+
+# We can save a value as an object using <- 
+#
+# Read this as:
+# "z gets 5"
+
+z <- 5
+
+# Type the name of an object to see what it contains.
+
 z
+
+
+# We can replace the value stored in an object.
+
 z <- 3
 z
 
-# The number [1] before the answers just means that this item is the first element of a vector (vectors can be thought of as a collection of related values, such as a column in a data table).
+
+# You may see output like this in the Console:
+#
+# [1] 3
+#
+# The [1] means that the value shown is the first element
+# of the object being printed.
 
 
-# vector of ten values from 1 to 10, demonstrates the basic R syntax for creating a sequence of numbers
+############################################################
+####################### VECTORS #############################
+############################################################
+
+# A vector is a collection of values.
+#
+# The function c() combines values into a vector.
+
+numbers <- c(1, 2, 3, 4, 5)
+
+numbers
+
+
+# There are several convenient ways to generate sequences.
+
+1:10
+
 seq(1, 10, by = 0.5)
-seq(1, by = 0.5, length = 10)
+
+seq(1, by = 0.5, length.out = 10)
+
 rep(1, 10)
-x = seq(0, 3, by = 0.01)
 
-# combine vectors to build up data frames by “binding” them together either are rows or as columns
-p = 1:10
-q = 10:1
-cbind(p,q)  	# bind as columns
-rbind(q,p)		# bind as rows
 
-# R can perform standard logical comparisons, syntax for the different logical operators, some of which are odd:
+# Save a sequence as an object.
+
+x <- seq(0, 3, by = 0.01)
+
+x
+
+
+# We can combine vectors as columns or rows.
+
+p <- 1:10
+q <- 10:1
+
+cbind(p, q)     # bind as columns
+
+rbind(p, q)     # bind as rows
+
+
+############################################################
+################## LOGICAL COMPARISONS ######################
+############################################################
+
+# R can ask whether statements are TRUE or FALSE.
+#
+# == means "is equal to"
+# != means "is not equal to"
+# >  means "greater than"
+# <  means "less than"
+
 log(1) == 0
+
 exp(0) != 1
 
-###################################
-##### working and saving data #####
-###################################
-frogs = c(1.1, 1.3, 1.7, 1.8, 1.9, 2.1, 2.3, 2.4,
-          2.5, 2.8, 3.1, 3.3, 3.6, 3.7, 3.9, 4.1, 4.5,
-          4.8, 5.1, 5.3)
+5 > 3
 
-tadpoles = rnorm(n = 20, mean = 2 * frogs, sd = 0.5)
+5 < 3
 
-dat <- cbind(tadpoles, frogs)
-# working with data
-# One of the first things you’ll do with any data set when you first load it up is some basic checks to see what you are dealing with.
-# Typing the variable name will show you its contents, but if you just loaded up something with a million entries then you’ll sit for a long time as R lists every number on the screen.
-# The function class will tell you the type of data you’ve just loaded.  
+
+############################################################
+##################### CHARACTER DATA ########################
+############################################################
+
+# Text is called "character" data in R.
+# Character values must be placed inside quotation marks.
+
+direction <- c("north", "south", "east", "west")
+
+direction
+
+
+# Logical comparisons also work with character data.
+
+direction == "east"
+
+
+############################################################
+################ WORKING WITH DATA ##########################
+############################################################
+
+# Create a vector containing 20 values.
+
+frogs <- c(
+  1.1, 1.3, 1.7, 1.8, 1.9,
+  2.1, 2.3, 2.4, 2.5, 2.8,
+  3.1, 3.3, 3.6, 3.7, 3.9,
+  4.1, 4.5, 4.8, 5.1, 5.3
+)
+
+
+# We will generate some fake tadpole data.
+#
+# set.seed() makes the random numbers reproducible.
+# Everyone running this script should therefore get
+# the same values.
+
+set.seed(123)
+
+tadpoles <- rnorm(
+  n = length(frogs),
+  mean = 2 * frogs,
+  sd = 0.5
+)
+
+
+# Combine these vectors into a data frame.
+#
+# A data frame is one of the most common ways that
+# tabular data are stored in R.
+#
+# Rows usually represent observations or samples.
+# Columns represent variables.
+
+dat <- data.frame(
+  frogs = frogs,
+  tadpoles = tadpoles
+)
+
+dat
+
+
+# Check what type of object dat is.
 
 class(dat)
 
 
-# character data in R is usually displayed in double quotes to indicate that it is character data (e.g. the character “1” rather than the number 1)
-# Note that when your data is characters you'll need double-quotes in your comparison. e.g. 
-a = c("north","south","east","west")
-# also do logical comparisons with characters as well
-a == "east"
-
-# helpful TOOL
-# Be aware that RStudio has the capacity to auto-complete function names, function arguments, and file names
-
-# So, for example, if you type ‘read.t’ and then hit TAB, RStudio will finish typing read.table and it would also show what information you can specify for the read.table function.  
-# If you type read.table( and then hit TAB, RStudio will allow you to select the function argument that you want to fill in. 
-# If you type read.table(“ and then hit TAB, RStudio will show you the files in your current working directory and allow you to select one. 
-# If there are a lot of files in the directory, you can start typing the file name you want and then hit TAB again and RStudio will limit what it shows to just those files that match what you’ve typed so far
-
-# save the R environment and variables to use later
-setwd('/Users/alexchase/Desktop/sio262-workshop/')
-save(dat, a, x, z, file = "Lab1.RData")
-
-rm(list=ls())
-
-#Let's check out current working directory.
-#A directory is a location on your computer.
-#File outputs will be in this location unless a file path is specified.
-#Alternatively, you can also use the 'Files' tab, under 'More', to go to current working directory.
-getwd()
-
-# have students close and exit R, open a new window and:
-setwd('/Users/alexchase/Desktop/sio262-workshop/')
-load("Lab1.RData")
-
-# or save EVERYTHING so far:
-save.image("Lab1_all.RData")
-
-# not sure what variables you have defined,
-ls()
-
-
-# visualize dataframe in R environment
-
-# save as .csv file (like Excel format)
-write.table(dat, "my_frogs.csv", row.names = FALSE, sep = ",")
-
-
-# get the basic structure of the data
-
-dat <- read.table("frogs.txt", header = TRUE, sep = '\t')
-
-class(dat)
-
-# dat is in a “data.frame”, which is like a matrix but can also contain non-numeric data.
-# basic (or atomic) data types in R are integer, numeric (decimal), logical (TRUE/FALSE), factors, and character
-
+# str() is one of the most useful commands in R.
+# It shows the structure of an object.
 
 str(dat)
 
-# from this we learn that there are four columns of data named “frogs”, “tadpoles”, “color”, “spots” and 
-# that there are 20 rows of data, and 
-# that the data is numeric for the first two, a factor for the third, and logical for the fourth.
+
+# In RStudio, View() opens the data in a spreadsheet-like window.
+
+View(dat)
+
+
+############################################################
+################ FILES AND DIRECTORIES ######################
+############################################################
+
+# A directory is a folder on your computer.
+#
+# getwd() tells you R's current working directory.
+
+getwd()
+
+
+# list.files() shows the files and folders that R can
+# currently see.
+
+list.files()
+
+
+# For this workshop, your working directory should be the
+# main "16S-workshop" folder that you downloaded from GitHub.
+#
+# You should see folders including:
+#
+# "materials"
+# "R-scripts"
+# "images"
+#
+# If you do NOT see these, use:
+#
+# Session > Set Working Directory > Choose Directory...
+#
+# and select the main 16S-workshop folder.
+#
+# We avoid typing a path such as:
+#
+# /Users/alex/Desktop/...
+#
+# because that path would only work on one computer.
+
+
+############################################################
+##################### READING DATA ##########################
+############################################################
+
+# Check that R can find the example data file.
+
+file.exists("materials/frogs.txt")
+
+
+# TRUE means R found the file.
+#
+# If you get FALSE, your working directory is probably
+# not the main 16S-workshop folder.
+
+
+# Stop with a helpful message if the file cannot be found.
+
+if (!file.exists("materials/frogs.txt")) {
+  stop(
+    "R cannot find materials/frogs.txt. Set your working directory to the main 16S-workshop folder."
+  )
+}
+
+
+# Read the tab-delimited data file into R.
+
+dat <- read.delim(
+  "materials/frogs.txt",
+  header = TRUE
+)
+
+
+############################################################
+################## INSPECTING THE DATA ######################
+############################################################
+
+# Start by looking at the structure of any new dataset.
+
+str(dat)
+
+
+# The dataset contains:
+#
+# frogs      numeric data
+# tadpoles   numeric data
+# color      character data
+# spots      logical data (TRUE/FALSE)
+
+
+# Column names
 
 names(dat)
-# get the names of the columns (remember we used header = TRUE!!!)
+
+
+# Dimensions of the data:
+# number of rows followed by number of columns
 
 dim(dat)
-# get dimensions of dataframe
+
+
+# Number of rows
+
 nrow(dat)
+
+
+# Number of columns
+
 ncol(dat)
 
-# We can refer to specific columns of data by name using the $ syntax
-# useful with auto-complete TAB function!
 
-dat$frogs  			# show just the ‘frogs’ column
-dat$color[6:10]		# show the 6th though 10th elements of the color column
+# Preview the beginning of the dataset.
 
-# for a single vector, use length
-length(dat$frogs)
-
-# preview the data (useful if working with really large files!)
 head(dat)
+
+
+# Preview the end.
+
 tail(dat)
 
-# get quick statisticsal summary of each vector in the dataframe
+
+# Quick statistical summary of each variable.
+
 summary(dat)
 
-# Analyzing data and basic statistical inference
 
-# want the ability to summarize and visualize data
+############################################################
+#################### SELECTING DATA #########################
+############################################################
+
+# The $ symbol selects a column by name.
+
+dat$frogs
+
+dat$color
+
+
+# We can select specific positions from a vector.
+
+dat$color[6:10]
+
+
+# Data frames can be indexed using:
+#
+# dat[rows, columns]
+
+
+# First five rows, all columns
+
+dat[1:5, ]
+
+
+# All rows, first two columns
+
+dat[, 1:2]
+
+
+# Select columns by name
+
+dat[, c("frogs", "tadpoles")]
+
+
+# Logical comparisons are especially useful for filtering data.
+#
+# Show only rows where color is blue.
+
+dat[dat$color == "blue", ]
+
+
+# Show only rows where spots is TRUE.
+
+dat[dat$spots == TRUE, ]
+
+
+############################################################
+###################### DATA TYPES ###########################
+############################################################
+
+# Common types of data in R include:
+#
+# numeric      decimal numbers
+# integer      whole numbers
+# character    text
+# logical      TRUE/FALSE
+
+
+class(dat$frogs)
+
+class(dat$color)
+
+class(dat$spots)
+
+
+# A factor represents categorical data.
+#
+# We can explicitly tell R that "color" represents categories.
+
+dat$color <- factor(dat$color)
+
+class(dat$color)
+
+levels(dat$color)
+
+
+############################################################
+#################### SUMMARIZING DATA #######################
+############################################################
+
+# table() counts how often different categories occur.
+
 table(dat$color)
-table(dat$color,dat$spots)
 
-# basic statistical measurements - expanding on summary() function
+
+# We can also compare two categorical variables.
+
+table(dat$color, dat$spots)
+
+
+# Common numerical summaries
+
 mean(dat$frogs)
+
 median(dat$tadpoles)
-var(dat$frogs)  							## variance
-sd(dat$frogs)								## standard deviation
-cov(dat$frogs, dat$tadpoles)				## covariance
-cor(dat$frogs, dat$tadpoles)				## correllation
-quantile(dat$tadpoles, c(0.05,0.90))		## 5% and 90% quantiles
-min(dat$frogs)								## smallest value
-max(dat$frogs)								## largest value
 
-# R also has a set of apply functions for applying any function to sets of values within a data structure.
-apply(dat[,1:2], 1, sum)  	        # calculate sum of frogs & tadpoles by row (1st dimension)
-apply(dat[,1:2], 2, sum)	        # calculate sum of frogs & tadpoles by column (2nd dimension)
+var(dat$frogs)                    # variance
 
-# function "apply" will apply a function to either every row (dimension 1) or every column (dimension 2) of a matrix or data.frame. 
-# In this example the commands apply the “sum” function to the first two columns of the data (frogs & tadpoles) first calculated by 
-# row (the total number of individuals in each population) and 
-# second by column (the total number of frogs and tadpoles)
+sd(dat$frogs)                     # standard deviation
 
-tapply(dat$frogs, dat$color, mean)          			# calculate mean of frogs by color
-tapply(dat$frogs, dat[, c("color","spots")], mean)  		# calculate mean of frogs by color & spots
+cov(dat$frogs, dat$tadpoles)      # covariance
 
-# function "tapply" will apply a function to an R data object, grouping data according to a second variable or set of variables. 
-# The first example applies the “mean” function to frogs grouping them by color. 
-# The second shows that tapply can be used to apply a function over multiple groups, in this case color X spots. 
+cor(dat$frogs, dat$tadpoles)      # correlation
 
-# PLOT DATA
+quantile(
+  dat$tadpoles,
+  probs = c(0.05, 0.90)
+)
 
-plot(dat$frogs, dat$tadpoles)  					## x-y scatter plot
-abline(a = 0, b = 1)							## add a 1:1 line (intercept=0, slope=1)
+min(dat$frogs)
 
-plot.new()
+max(dat$frogs)
 
-hist(dat$tadpoles)								## histogram
-abline(v = mean(dat$tadpoles), col = "blue")					## add a vertical line at the mean
 
-pairs(dat)										## all pairwise scatter plots
+# We can calculate values separately for different groups
+# using tapply().
+#
+# Mean frog value for each color:
 
-plot.new()
+tapply(
+  dat$frogs,
+  dat$color,
+  mean
+)
 
-barplot(tapply(dat$frogs, dat$color, mean))		## barplot of frogs by color
-abline(h = 3, col = "red")									## add a horizontal line at 3
 
+# Mean frog value for every combination of color and spots:
+
+tapply(
+  dat$frogs,
+  list(
+    color = dat$color,
+    spots = dat$spots
+  ),
+  mean
+)
+
+
+############################################################
+###################### SAVING DATA ##########################
+############################################################
+
+# write.csv() saves a data frame as a comma-separated file.
+#
+# row.names = FALSE prevents R from adding an extra column
+# containing row numbers.
+
+write.csv(
+  dat,
+  "my_frogs.csv",
+  row.names = FALSE
+)
+
+
+# Check that the file was created.
+
+file.exists("my_frogs.csv")
+
+
+# For most analyses, your R SCRIPT is the important record
+# of what you did.
+#
+# If you close R and reopen it, you should be able to rerun
+# your script to recreate your analysis.
+#
+# We therefore will NOT rely on saving and restoring the
+# entire R workspace.
+
+
+############################################################
+###################### BASIC PLOTS ##########################
+############################################################
+
+# Scatter plot
+
+plot(
+  dat$frogs,
+  dat$tadpoles,
+  xlab = "Frogs",
+  ylab = "Tadpoles"
+)
+
+
+# Add a 1:1 line.
+#
+# a = intercept
+# b = slope
+
+abline(
+  a = 0,
+  b = 1
+)
+
+
+# Histogram showing the distribution of tadpole values.
+
+hist(
+  dat$tadpoles,
+  xlab = "Tadpoles",
+  main = "Distribution of tadpole values"
+)
+
+
+# Add a vertical line at the mean.
+
+abline(
+  v = mean(dat$tadpoles),
+  col = "blue"
+)
+
+
+# Pairwise plots should generally be made using numeric data.
+
+pairs(
+  dat[, c("frogs", "tadpoles")]
+)
+
+
+# Compare the distribution of frog values between colors.
+
+boxplot(
+  frogs ~ color,
+  data = dat,
+  xlab = "Color",
+  ylab = "Frogs"
+)
+
+
+############################################################
+#################### USEFUL RSTUDIO TIPS ####################
+############################################################
+
+# RStudio can automatically complete commands.
+#
+# Try typing:
+#
+# read.d
+#
+# and press TAB.
+#
+# RStudio should suggest functions beginning with those letters.
+
+
+# You can also ask R for help about any function.
+
+?mean
+
+?read.delim
+
+?plot
+
+
+# If the Console shows a + instead of a > prompt,
+# R thinks your command is unfinished.
+#
+# This often happens when you forget a closing parenthesis
+# or quotation mark.
+#
+# Press ESC to cancel the unfinished command.
+
+
+############################################################
+######################## FINISHED ###########################
+############################################################
+
+# You now know enough R to:
+#
+#   - create and store objects
+#   - work with vectors
+#   - understand TRUE/FALSE comparisons
+#   - read a data file
+#   - inspect a data frame
+#   - select rows and columns
+#   - calculate basic summaries
+#   - make simple plots
+#
+# These are the same basic operations we will use when
+# working with microbiome data.
