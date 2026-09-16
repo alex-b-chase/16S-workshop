@@ -100,7 +100,8 @@ if (!requireNamespace("BiocManager", quietly = TRUE)) {
 
 bioc_packages <- c(
   "biomformat",  # importing BIOM abundance tables
-  "phyloseq"     # organizing and analyzing microbiome data
+  "rhdf5",       # required to read HDF5-format BIOM files
+  "phyloseq"     # organizing microbiome data
 )
 
 
