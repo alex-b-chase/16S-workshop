@@ -1054,23 +1054,39 @@ write.csv(
 ################### BETA DIVERSITY ##########################
 ############################################################
 
-# Beta diversity describes differences in community
-# composition AMONG samples.
+# For beta diversity, we will use the same rarefied
+# community table generated above.
 #
-# Here we will use:
+# Rarefaction places all retained samples at the same
+# sequencing depth.
 #
-#   1. relative sequence abundance
-#   2. Bray-Curtis dissimilarity
-#   3. NMDS to visualize those dissimilarities
+# We will then square-root transform the abundances.
+#
+# WHY?
+#
+# Microbial communities often contain a small number of very
+# abundant ASVs and many less abundant ASVs.
+#
+# A square-root transformation reduces the influence of the
+# most abundant ASVs without converting the data to simple
+# presence/absence.
 
 
-# vegan expects:
-#
-# rows    = samples
-# columns = ASVs
+community_sqrt <- sqrt(
+  community_rare
+)
 
-community_counts <- t(
-  ASV_table
+
+############################################################
+################ BRAY-CURTIS DISTANCE #######################
+############################################################
+
+# Calculate Bray-Curtis dissimilarity from the square-root
+# transformed rarefied abundance table.
+
+bray_distance <- vegdist(
+  community_sqrt,
+  method = "bray"
 )
 
 
@@ -1081,7 +1097,7 @@ community_counts <- t(
 # Samples contain different total numbers of sequencing reads.
 #
 # For this analysis, we will convert the counts in each sample
-# to relative abundances.
+# to relative abundances. This is different from sqrt transformation above
 #
 # Each row will therefore sum to 1.
 
@@ -1096,31 +1112,6 @@ community_relative <- decostand(
 rowSums(
   community_relative
 )
-
-
-############################################################
-################ BRAY-CURTIS DISTANCE #######################
-############################################################
-
-# Bray-Curtis dissimilarity compares the composition of
-# pairs of communities.
-#
-# Here it is calculated from relative sequence abundances.
-#
-# Values range from:
-#
-#   0 = identical composition
-#
-# toward
-#
-#   1 = increasingly different composition
-
-
-bray_distance <- vegdist(
-  community_relative,
-  method = "bray"
-)
-
 
 ############################################################
 ######################## NMDS ###############################
@@ -1145,13 +1136,14 @@ bray_distance <- vegdist(
 
 set.seed(123)
 
-
 NMDS <- metaMDS(
-  bray_distance,
+  community_sqrt,
+  distance = "bray",
   k = 2,
-  trymax = 200,
+  try = 50,
+  trymax = 500,
   autotransform = FALSE,
-  trace = FALSE
+  trace = TRUE
 )
 
 
