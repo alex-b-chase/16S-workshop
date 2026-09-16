@@ -99,43 +99,87 @@ if (!requireNamespace("BiocManager", quietly = TRUE)) {
 # Packages needed from Bioconductor
 
 bioc_packages <- c(
-  "biomformat",  # importing BIOM abundance tables
-  "rhdf5",       # required to read HDF5-format BIOM files
-  "phyloseq"     # organizing microbiome data
+  "biomformat",    # importing BIOM abundance tables
+  "Rhdf5lib",      # HDF5 libraries used by rhdf5
+  "rhdf5filters",  # HDF5 compression support
+  "rhdf5",         # required for QIIME 2 HDF5 BIOM files
+  "phyloseq"       # organizing microbiome data
 )
 
-
 # Determine which Bioconductor packages are missing
+# Check whether packages can actually be loaded.
+#
+# This is slightly different from simply asking whether a
+# package is installed. Occasionally a package may exist on
+# the computer but fail to load because one of its compiled
+# dependencies is outdated or damaged.
 
 missing_bioc <- bioc_packages[
-  !sapply(bioc_packages, requireNamespace, quietly = TRUE)
+  !sapply(
+    bioc_packages,
+    requireNamespace,
+    quietly = TRUE
+  )
 ]
 
 
-# Install only missing packages.
-#
-# update = FALSE prevents R from trying to update every other
-# package already installed on your computer.
-#
-# ask = FALSE prevents unnecessary update questions.
-
 if (length(missing_bioc) > 0) {
 
-  cat("Installing Bioconductor packages:\n")
-  cat(paste(missing_bioc, collapse = ", "), "\n\n")
+  cat("Installing or repairing Bioconductor packages:\n")
+  cat(
+    paste(
+      missing_bioc,
+      collapse = ", "
+    ),
+    "\n\n"
+  )
 
   BiocManager::install(
     missing_bioc,
     update = FALSE,
-    ask = FALSE
+    ask = FALSE,
+    force = TRUE
   )
 
 } else {
 
-  cat("All required Bioconductor packages are already installed.\n\n")
+  cat(
+    "All required Bioconductor packages are already installed and working.\n\n"
+  )
 
 }
 
+############################################################
+############ CHECK BIOCONDUCTOR INSTALLATION ################
+############################################################
+
+bioc_check <- sapply(
+  bioc_packages,
+  requireNamespace,
+  quietly = TRUE
+)
+
+
+print(bioc_check)
+
+
+if (!all(bioc_check)) {
+
+  failed_bioc <- names(
+    bioc_check
+  )[!bioc_check]
+
+  stop(
+    paste0(
+      "\nOne or more Bioconductor packages could not be loaded:\n\n",
+      paste(
+        failed_bioc,
+        collapse = ", "
+      ),
+      "\n\nSave the error messages in the Console and bring them to the workshop."
+    )
+  )
+}
 
 ############################################################
 ################ CHECK THE INSTALLATION #####################
