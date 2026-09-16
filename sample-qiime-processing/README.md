@@ -120,7 +120,7 @@ This information becomes critical once we begin asking ecological questions abou
 
 The example metadata used for this dataset is provided as:
 
-`metadata.tsv`
+`MO18-metadata.txt`
 
 ## Running jobs on an HPC
 
