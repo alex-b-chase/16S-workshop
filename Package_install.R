@@ -196,7 +196,7 @@ if (!all(installation_check)) {
 # the major packages are working correctly.
 
 
-# Load the packages without printing all of their startup messages
+# Load the packages without printing all of their startup messages.
 
 suppressPackageStartupMessages({
   library(vegan)
@@ -208,54 +208,67 @@ suppressPackageStartupMessages({
 })
 
 
-# Create a tiny fake microbial community.
+# Create a small fake microbial community.
 #
 # Rows = samples
 # Columns = ASVs
 #
-# These numbers are made up. They are only being used to test R.
+# These numbers are made up. They are only being used
+# to test that the packages are working.
 
 test_community <- data.frame(
-  ASV1 = c(20, 25, 3, 5, 40, 35),
-  ASV2 = c(10, 15, 35, 30, 5, 8),
-  ASV3 = c(30, 25, 10, 12, 20, 18),
-  ASV4 = c(5, 10, 25, 28, 10, 12),
-  ASV5 = c(15, 10, 5, 8, 25, 22)
+  ASV1 = c(40, 35, 30, 5, 10, 8),
+  ASV2 = c(30, 25, 28, 10, 8, 12),
+  ASV3 = c(5, 10, 8, 35, 40, 30),
+  ASV4 = c(10, 8, 12, 30, 25, 35),
+  ASV5 = c(15, 22, 18, 20, 17, 15)
 )
 
 rownames(test_community) <- paste0("Sample_", 1:6)
 
 
-# Calculate Bray-Curtis dissimilarity among the fake samples
+# Convert counts to relative abundance.
+
+test_relative <- decostand(
+  test_community,
+  method = "total"
+)
+
+
+# Calculate Bray-Curtis dissimilarity among samples.
 
 test_distance <- vegdist(
-  test_community,
+  test_relative,
   method = "bray"
 )
 
 
-# Run a simple NMDS ordination
+# Run a simple Principal Coordinates Analysis (PCoA).
 
-set.seed(123)
-
-test_nmds <- metaMDS(
+test_pcoa <- cmdscale(
   test_distance,
   k = 2,
-  trymax = 50,
-  trace = FALSE
+  eig = TRUE
 )
 
 
-# Extract the coordinates for plotting
+# Extract coordinates for plotting.
 
-test_coordinates <- as.data.frame(test_nmds$points)
+test_coordinates <- as.data.frame(
+  test_pcoa$points
+)
+
+colnames(test_coordinates) <- c(
+  "PCoA1",
+  "PCoA2"
+)
 
 
-# Make a simple plot
+# Make a simple plot.
 
 ggplot(
   test_coordinates,
-  aes(x = MDS1, y = MDS2)
+  aes(x = PCoA1, y = PCoA2)
 ) +
   geom_point(size = 3) +
   theme_classic() +
