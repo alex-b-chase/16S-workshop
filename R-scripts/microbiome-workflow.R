@@ -54,33 +54,15 @@ suppressPackageStartupMessages({
 
 # We assume your working directory is the main
 # 16S-workshop folder.
-#
-# Check:
 
 getwd()
 
 list.files()
 
 
-# You should see folders including:
-#
-# materials
-# R-scripts
-# images
-#
-# If not:
-#
-# Session > Set Working Directory > Choose Directory...
-#
-# and choose the main 16S-workshop directory.
-
-
 DATA_DIR <- "materials"
 
 OUTPUT_DIR <- "workshop-results"
-
-
-# Create a folder where we can save results.
 
 dir.create(
   OUTPUT_DIR,
@@ -88,31 +70,35 @@ dir.create(
 )
 
 
-# Files required for the workshop.
+# These are processed QIIME 2 artifacts.
+#
+# table.qza contains the ASV abundance table.
+# taxonomy.qza contains the taxonomic assignments.
+#
+# metadata.csv describes the samples.
 
 metadata_file <- file.path(
   DATA_DIR,
   "metadata.csv"
 )
 
-table_file <- file.path(
+table_qza <- file.path(
   DATA_DIR,
-  "feature-table.biom"
+  "table.qza"
 )
 
-taxonomy_file <- file.path(
+taxonomy_qza <- file.path(
   DATA_DIR,
-  "taxonomy.tsv"
+  "taxonomy.qza"
 )
 
-
-# Make sure R can find all three files.
 
 required_files <- c(
   metadata_file,
-  table_file,
-  taxonomy_file
+  table_qza,
+  taxonomy_qza
 )
+
 
 file.exists(required_files)
 
@@ -184,6 +170,97 @@ metadata[] <- lapply(
     }
   }
 )
+
+############################################################
+################## WHAT IS A .QZA FILE? #####################
+############################################################
+
+# QIIME 2 stores data in files ending in .qza.
+#
+# A .qza file is a QIIME 2 artifact. It contains:
+#
+#   - the biological data
+#   - information about the type of data
+#   - provenance describing how the artifact was generated
+#
+# QIIME 2 normally handles these files for you.
+#
+# However, a .qza artifact is also a compressed archive.
+# We can extract its contents in R to see the underlying data.
+
+
+# Create somewhere to extract the files.
+
+QZA_DIR <- file.path(
+  OUTPUT_DIR,
+  "qza-extracted"
+)
+
+dir.create(
+  QZA_DIR,
+  showWarnings = FALSE
+)
+
+unzip(
+  table_qza,
+  list = TRUE
+)
+
+############################################################
+################ EXTRACT THE ASV TABLE ######################
+############################################################
+
+table_extract_dir <- file.path(
+  QZA_DIR,
+  "table"
+)
+
+dir.create(
+  table_extract_dir,
+  showWarnings = FALSE
+)
+
+
+unzip(
+  zipfile = table_qza,
+  exdir = table_extract_dir
+)
+
+# Every QIIME 2 artifact has a unique ID.
+#
+# That is why the extracted folder has a seemingly random
+# string of letters and numbers.
+#
+# Rather than hard-coding that ID, let R find it.
+
+table_artifact_dir <- list.dirs(
+  table_extract_dir,
+  recursive = FALSE,
+  full.names = TRUE
+)
+
+
+# There should be exactly one top-level artifact directory.
+
+table_artifact_dir
+
+
+if (length(table_artifact_dir) != 1) {
+  stop("Unexpected structure inside table.qza.")
+}
+
+
+# The abundance table is stored inside the artifact's
+# data directory.
+
+biom_file <- file.path(
+  table_artifact_dir,
+  "data",
+  "feature-table.biom"
+)
+
+
+file.exists(biom_file)
 
 
 ############################################################
@@ -316,10 +393,47 @@ identical(
 
 
 ############################################################
-#################### IMPORT TAXONOMY ########################
+################### EXTRACT TAXONOMY ########################
 ############################################################
 
-# taxonomy.tsv contains the inferred taxonomy for each ASV.
+taxonomy_extract_dir <- file.path(
+  QZA_DIR,
+  "taxonomy"
+)
+
+dir.create(
+  taxonomy_extract_dir,
+  showWarnings = FALSE
+)
+
+
+unzip(
+  zipfile = taxonomy_qza,
+  exdir = taxonomy_extract_dir
+)
+
+
+taxonomy_artifact_dir <- list.dirs(
+  taxonomy_extract_dir,
+  recursive = FALSE,
+  full.names = TRUE
+)
+
+
+if (length(taxonomy_artifact_dir) != 1) {
+  stop("Unexpected structure inside taxonomy.qza.")
+}
+
+
+taxonomy_file <- file.path(
+  taxonomy_artifact_dir,
+  "data",
+  "taxonomy.tsv"
+)
+
+
+file.exists(taxonomy_file)
+
 
 taxonomy_raw <- read.delim(
   taxonomy_file,
@@ -330,30 +444,6 @@ taxonomy_raw <- read.delim(
 
 
 head(taxonomy_raw)
-
-
-# Every ASV in our abundance table should have a taxonomic
-# record.
-
-if (!all(
-  rownames(ASV_table) %in% rownames(taxonomy_raw)
-)) {
-
-  stop(
-    "Some ASVs in the abundance table are missing from the taxonomy file."
-  )
-
-}
-
-
-# Put taxonomy into the same order as the ASV table.
-
-taxonomy_raw <- taxonomy_raw[
-  rownames(ASV_table),
-  ,
-  drop = FALSE
-]
-
 
 ############################################################
 ################ PARSE TAXONOMIC RANKS ######################
@@ -967,34 +1057,44 @@ write.csv(
 # Beta diversity describes differences in community
 # composition AMONG samples.
 #
-# We now need to make two decisions:
+# Here we will use:
 #
-#   1. How should abundance be transformed?
-#   2. How should differences among samples be measured?
-#
-#
-# Here we will:
-#
-#   - convert counts to relative abundance
-#   - square-root those relative abundances
-#   - calculate Bray-Curtis dissimilarity
-#
-#
-# The square-root relative-abundance transformation is also
-# called a Hellinger transformation.
-#
-# It reduces the influence of extremely abundant ASVs while
-# retaining abundance information.
+#   1. relative sequence abundance
+#   2. Bray-Curtis dissimilarity
+#   3. NMDS to visualize those dissimilarities
 
+
+# vegan expects:
+#
+# rows    = samples
+# columns = ASVs
 
 community_counts <- t(
   ASV_table
 )
 
 
-community_hellinger <- decostand(
+############################################################
+################# RELATIVE ABUNDANCE ########################
+############################################################
+
+# Samples contain different total numbers of sequencing reads.
+#
+# For this analysis, we will convert the counts in each sample
+# to relative abundances.
+#
+# Each row will therefore sum to 1.
+
+community_relative <- decostand(
   community_counts,
-  method = "hellinger"
+  method = "total"
+)
+
+
+# Confirm that each sample sums to 1.
+
+rowSums(
+  community_relative
 )
 
 
@@ -1002,25 +1102,24 @@ community_hellinger <- decostand(
 ################ BRAY-CURTIS DISTANCE #######################
 ############################################################
 
-# Bray-Curtis ranges from:
+# Bray-Curtis dissimilarity compares the composition of
+# pairs of communities.
 #
-# 0 = identical composition
+# Here it is calculated from relative sequence abundances.
+#
+# Values range from:
+#
+#   0 = identical composition
 #
 # toward
 #
-# 1 = increasingly different composition
-#
-# It considers abundance but does not incorporate phylogenetic
-# relationships among ASVs.
+#   1 = increasingly different composition
 
 
 bray_distance <- vegdist(
-  community_hellinger,
+  community_relative,
   method = "bray"
 )
-
-
-bray_distance
 
 
 ############################################################
